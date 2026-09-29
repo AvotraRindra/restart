@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap");
+
+:root {
+  /* Polices */
+  --font-body: "DM Sans", Arial, sans-serif;
+  --font-heading: "DM Sans", Arial, sans-serif;
+  --font-display: "Playfair Display", Georgia, serif;
+
+  /* Rouge de base */
+  --color-primary: #d90025;
+  --color-primary-light: color-mix(in srgb, var(--color-primary), white 25%);
+  --color-primary-dark: color-mix(in srgb, var(--color-primary), black 25%);
+  --color-primary-soft: color-mix(in srgb, var(--color-primary), white 92%);
+
+  /* Mode clair */
+  --color-background: #fffaf9;
+  --color-surface: #ffffff;
+  --color-text: #101014;
+  --color-text-muted: #62616a;
+  --color-border: #e8dfe0;
+  --color-input: var(--color-surface);
+  --color-link: var(--color-primary);
+  --color-button-text: #ffffff;
+
+  /* Dégradé principal */
+  --gradient-primary: linear-gradient(
+    100deg,
+    var(--color-primary-light),
+    var(--color-primary),
+    var(--color-primary-dark)
+  );
+}
+
+/* Activer avec class="dark" sur un élément parent */
+.dark {
+  --color-background: #111013;
+  --color-surface: #1d1b20;
+  --color-text: #f9f6f7;
+  --color-text-muted: #b8afb3;
+  --color-border: #383137;
+  --color-input: #252228;
+  --color-link: var(--color-primary-light);
+}
+
+/* Application générale des variables */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3,
+button,
+input {
+  font-family: var(--font-heading);
+}
+
+a {
+  color: var(--color-link);
+}
