@@ -1,0 +1,14 @@
+const express = require("express");
+const router = express.Router();
+const auth = require("../middlewares/auth");
+const c = require("../controllers/memoryController");
+const upload = require("../middlewares/upload");
+router.post("/", auth, upload.audio.single("audio"), c.create);
+router.get("/mine", auth, c.mine);
+router.get("/shared", auth, c.shared);
+router.post("/:id/photos", auth, upload.images.array("photos", 10), c.addPhotos);
+router.post("/:id/characters", auth, upload.images.single("image"), c.addCharacter);
+router.patch("/:id/access", auth, c.updateAccess);
+router.get("/:id", auth, c.getOne);
+router.delete("/:id", auth, c.remove);
+module.exports = router;
