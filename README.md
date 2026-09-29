@@ -1,71 +1,116 @@
-# RE:START / Memories
+# RE:START — V3 intégré
 
-Version intégrée après fusion des branches frontend et du backend V2.
+Version intégrée du projet WebCup : React + Vite, Node.js/Express, MySQL, Socket.IO, Groq et Gemini/MNEMOS.
 
-## Fonctionnalités branchées
+## Démarrage
 
-- Landing page publique sans « Mes souvenirs ».
-- Inscription et connexion JWT.
-- Dashboard protégé après connexion.
-- Création de souvenir texte ou vocal.
-- Types : livre, vidéo, bande dessinée.
-- Transcription vocale via Groq/Whisper côté backend.
-- Upload de photos pour les souvenirs vidéo.
-- Upload d'un personnage de référence pour une BD.
-- Génération MNEMOS/Gemini et consultation du résultat.
-- Mes souvenirs : recherche, lecture audio, public/privé, suppression.
-- Souvenirs publics : réactions, commentaires, réponses, réactions aux commentaires.
-- Messages privés/groupes, recherche d'utilisateurs et actualisation temps réel Socket.IO.
-- Notifications et mise à jour temps réel.
-- Mode clair/sombre.
-
-## 1. Base MySQL
-
-`backend/database.sql` contient le schéma complet V2 pour une nouvelle base. Il réinitialise les tables de l'application : sauvegardez vos données avant de l'importer si votre base contient déjà des données utiles.
-
-## 2. Backend
+### Backend
 
 ```bash
 cd backend
 npm install
+node src/server.js
 ```
 
-Copier `.env.example` vers `.env`, puis renseigner MySQL, JWT, Groq et Gemini.
+Au démarrage, `AUTO_MIGRATE=true` met à niveau une ancienne base RE:START sans supprimer les souvenirs existants. `migration_v3.sql` est fourni si vous préférez faire la migration manuellement.
 
-```bash
-npm run dev
-```
-
-Test : `GET http://localhost:5000/api/health`.
-
-## 3. Frontend
+### Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --host 0.0.0.0
 ```
 
-Dans `frontend/.env` :
+Copiez `frontend/.env.example` vers `frontend/.env` et renseignez `VITE_API_URL`.
+
+## V3 — fonctionnalités ajoutées
+
+- inscription avec vérification e-mail ;
+- mot de passe oublié + lien de réinitialisation par e-mail ;
+- connexion Google et GitHub ;
+- routes Login/Register automatiquement inaccessibles tant qu'une session JWT valide existe ;
+- page Profil : nom, bio, photo, sexe, date de naissance, thème ;
+- page Paramètres nettoyée : aucune clé/API n'est affichée ;
+- notifications cliquables vers le souvenir ou la discussion concernée ;
+- lecteur de souvenir et URL publique `/memory/:id` pour les souvenirs publics ;
+- souvenirs récents du Dashboard directement ouvrables ;
+- lecteur de livre 3D en double page, avec perspective et navigation comme un vrai livre ;
+- messagerie temps réel améliorée, présence/en ligne et auto-scroll ;
+- pièces jointes de souvenir : images, vidéos, audio, PDF et documents ;
+- navigation mobile transformée en barre basse pour garder toutes les fonctions accessibles ;
+- rotation Gemini sur jusqu'à 5 clés ;
+- Helmet, limitation de débit sur l'authentification, hash bcrypt, JWT, état OAuth signé ;
+- révocation des anciennes sessions JWT après une réinitialisation de mot de passe ;
+- Google/GitHub n'acceptent que des adresses e-mail vérifiées.
+
+## Configuration e-mail
+
+Le backend utilise SMTP. Exemple Gmail :
 
 ```env
-VITE_API_URL=http://localhost:5000
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=votre-adresse@gmail.com
+SMTP_PASS=votre-mot-de-passe-application
+MAIL_FROM=RE:START <votre-adresse@gmail.com>
 ```
 
-Si le frontend est sur un autre appareil du même réseau, remplacez `localhost` par l'IPv4 du PC backend, par exemple :
+Ne mettez jamais le mot de passe normal de votre compte dans Git. Utilisez les identifiants SMTP prévus par votre fournisseur.
+
+## OAuth
+
+Variables Google :
 
 ```env
-VITE_API_URL=http://192.168.1.15:5000
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=https://VOTRE-BACKEND/api/auth/oauth/google/callback
 ```
 
-Et dans `backend/.env`, autorisez l'origine Vite de l'autre PC :
+Variables GitHub :
 
 ```env
-FRONTEND_URL=http://192.168.1.20:5173
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GITHUB_REDIRECT_URI=https://VOTRE-BACKEND/api/auth/oauth/github/callback
 ```
 
-Plusieurs origines peuvent être séparées par des virgules.
+Le même callback doit être enregistré dans la console du fournisseur OAuth.
+
+Pour le développement local, adaptez `BACKEND_PUBLIC_URL`, `FRONTEND_PUBLIC_URL` et les callback URLs à votre environnement.
+
+## Cinq clés Gemini
+
+Deux formats sont supportés :
+
+```env
+GEMINI_API_KEYS=cle1,cle2,cle3,cle4,cle5
+```
+
+ou :
+
+```env
+GEMINI_API_KEY_1=
+GEMINI_API_KEY_2=
+GEMINI_API_KEY_3=
+GEMINI_API_KEY_4=
+GEMINI_API_KEY_5=
+```
+
+`GEMINI_API_KEY` reste aussi supportée. MNEMOS change automatiquement de clé si une clé subit une erreur temporaire, un quota/rate-limit ou une indisponibilité.
+
+## Important avant déploiement
+
+- utilisez HTTPS ;
+- gardez `.env` hors de Git ;
+- remplacez `JWT_SECRET` par une longue valeur aléatoire ;
+- renseignez uniquement les origines frontend nécessaires dans `FRONTEND_URL` ;
+- utilisez un compte MySQL dédié avec les droits nécessaires ;
+- faites une sauvegarde MySQL avant toute migration manuelle.
+
 
 ## Limite média actuelle
 
-MNEMOS génère réellement le contenu structuré du livre, les cases/dialogues/prompts de la BD et le storyboard/narration de la vidéo. Le backend actuel ne fabrique pas encore automatiquement des illustrations IA finales pour les cases ni un fichier MP4 final. L'atelier affiche clairement ces résultats et permet de relancer la génération.
+Le livre est généré et rendu en lecteur 3D. La BD et la vidéo utilisent toujours le moteur MNEMOS existant : il produit les cases/dialogues/prompts de BD et le storyboard/narration vidéo. La génération automatique des images finales de BD et d'un fichier MP4 final nécessite un moteur image/vidéo supplémentaire et n'est pas simulée dans cette version.

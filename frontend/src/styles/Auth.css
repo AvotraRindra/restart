@@ -2341,3 +2341,42 @@
 /* V3 auth: Google + GitHub, reset et messages de succès */
 .auth-socials{grid-template-columns:repeat(2,1fr)}.auth-success{padding:10px 12px;border-radius:10px;background:rgba(28,174,113,.1);border:1px solid rgba(28,174,113,.24);color:#13865a;font-size:12px;margin-bottom:10px}.auth-resend-link{display:block;margin:7px auto 0;border:0;background:transparent;color:inherit;text-decoration:underline}.auth-utility-page{display:grid;place-items:center;padding:20px}.auth-utility-card{position:relative;z-index:4;width:min(450px,94vw);background:rgba(255,255,255,.94);border:1px solid rgba(217,0,37,.12);border-radius:26px;padding:38px;box-shadow:0 26px 80px rgba(50,20,30,.17);text-align:center}.auth-utility-card h1{font-size:31px;margin:8px 0}.auth-utility-card>p{color:var(--color-text-muted);font-size:13px;line-height:1.6}.auth-utility-card form{display:flex;flex-direction:column;gap:12px;margin-top:20px}.auth-utility-card form>input{height:48px;border:1px solid var(--color-border);border-radius:13px;padding:0 14px;background:var(--color-input);color:var(--color-text);outline:0}.auth-utility-back{margin-top:16px;border:0;background:transparent;color:var(--color-primary)}
 @media(max-width:520px){.auth-page{--auth-card-height:560px}.auth-left{height:220px}.auth-hero{top:70px}.auth-hero h1{font-size:32px}.auth-right{padding:0 10px 28px}.auth-card-scene{width:96vw;margin:-3px auto 0}.auth-card-face{padding:18px 14px}.auth-register-face{overflow-y:auto}.auth-socials button{min-height:42px}.auth-utility-card{padding:28px 18px}.auth-utility-card h1{font-size:27px}}
+
+/* V3.1 — récupération de mot de passe dans la même zone visuelle que la connexion */
+.auth-utility-page{
+  display:grid;
+  place-items:initial;
+  padding:0;
+}
+.auth-utility-right{position:relative;z-index:2}
+.auth-utility-scene{height:var(--auth-card-height)}
+.auth-utility-inner{transform:none!important}
+.auth-utility-face{justify-content:flex-start}
+.auth-utility-face .auth-subtitle{margin-bottom:24px}
+.auth-utility-form{gap:14px}
+.auth-utility-field-symbol{
+  flex:0 0 46px;
+  display:grid;
+  place-items:center;
+  color:var(--color-text-muted);
+  font-size:16px;
+  font-weight:700;
+}
+.auth-utility-form .auth-field input{padding-right:14px}
+.auth-utility-back{
+  align-self:center;
+  margin-top:18px;
+  padding:8px 10px;
+  border:0;
+  background:transparent;
+  color:var(--color-primary);
+  font:inherit;
+  font-size:12px;
+  font-weight:650;
+  cursor:pointer;
+}
+.auth-utility-back:hover{text-decoration:underline}
+@media(max-width:900px){
+  .auth-utility-page .auth-left{display:block}
+  .auth-utility-page .auth-right{display:flex}
+}

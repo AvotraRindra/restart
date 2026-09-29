@@ -13,7 +13,7 @@ function makeIcon(glyph) {
         {...props}
       >
         {title ? <title>{title}</title> : null}
-        <text x="12" y="16" textAnchor="middle" fontSize="14" fill="currentColor" fontFamily="Arial, sans-serif">
+        <text x="12" y="16" textAnchor="middle" fontSize="17.5" fill="currentColor" fontFamily="Arial, sans-serif">
           {glyph}
         </text>
       </svg>

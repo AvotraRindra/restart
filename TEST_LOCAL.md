@@ -1,22 +1,63 @@
-# Tests locaux rapides
+# TEST LOCAL — RE:START V3
 
-1. Démarrer MySQL/XAMPP.
-2. Démarrer `backend` avec `npm run dev`.
-3. Vérifier `GET /api/health`.
-4. Démarrer `frontend` avec `npm run dev`.
-5. Créer un compte puis vérifier la redirection vers `/dashboard`.
-6. Créer un souvenir `livre` en texte et laisser MNEMOS générer les pages.
-7. Créer un souvenir `video`, ajouter des photos puis vérifier le storyboard dans Atelier créatif.
-8. Créer un souvenir `bd`, ajouter un personnage puis vérifier les cases/dialogues.
-9. Dans Mes souvenirs : tester recherche, public/privé, audio et suppression.
-10. Avec deux comptes : rendre un souvenir public, tester réaction, commentaire et réponse.
-11. Avec deux comptes : créer une discussion privée, envoyer des messages et vérifier les notifications en temps réel.
-12. Tester le mode clair/sombre puis recharger la page.
+## 1. Base de données
 
-## Deux PC sur le même réseau
+Démarrez MySQL/XAMPP. Vérifiez que `DB_NAME` correspond à votre base. Le backend met automatiquement à niveau le schéma si `AUTO_MIGRATE=true`.
 
-Frontend : `VITE_API_URL=http://IP_DU_PC_BACKEND:5000`
+## 2. Backend
 
-Backend : `FRONTEND_URL=http://IP_DU_PC_FRONTEND:5173`
+```bash
+cd backend
+npm install
+node src/server.js
+```
 
-Le serveur Node écoute déjà sur `0.0.0.0`.
+Test : `http://localhost:5000/api/health`.
+
+## 3. Frontend
+
+Créez `frontend/.env` :
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+Puis :
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Pour tester depuis un téléphone du même réseau :
+
+```bash
+npm run dev -- --host 0.0.0.0
+```
+
+et utilisez l'IPv4 du PC dans `VITE_API_URL` et `FRONTEND_URL`.
+
+## 4. Ordre de test conseillé
+
+1. Inscription → réception e-mail → lien `/verify-email` → connexion.
+2. Mot de passe oublié → e-mail → `/reset-password` → nouveau login ; vérifier qu'un ancien JWT n'est plus accepté.
+3. Google / GitHub après configuration des applications OAuth.
+4. Profil → modifier nom/bio/photo → recharger la page.
+5. Nouveau souvenir texte → ajouter des pièces jointes → sauvegarder.
+6. Nouveau souvenir vocal → vérifier `transcription_status=completed`.
+7. Livre → MNEMOS → lecteur 3D double page → pages précédentes/suivantes.
+8. Passer un souvenir en Public → copier son URL `/memory/:id` → ouvrir dans une fenêtre privée sans connexion.
+9. Dashboard → cliquer un souvenir récent → lecteur direct.
+10. Partagés → Voir le souvenir → réactions/commentaires.
+11. Deux comptes dans deux navigateurs → Messages → vérifier le point vert En ligne, typing et message temps réel.
+12. Depuis le second compte, réagir/commenter → depuis le premier compte cliquer la notification → ouverture du bon souvenir.
+13. Tester à 390px/430px de large : barre de navigation basse, messages, création souvenir, profil et lecteur.
+
+## 5. E-mail
+
+Si aucun e-mail n'arrive, regarder le terminal backend. La configuration SMTP est obligatoire pour vérification et mot de passe oublié.
+
+## 6. Gemini
+
+Ajoutez jusqu'à 5 clés. Testez une génération Livre/BD/Vidéo. Le backend essaie les clés suivantes sur les erreurs temporaires/quota.
