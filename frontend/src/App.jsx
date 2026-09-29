@@ -1,122 +1,75 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useMemo, useState } from "react";
+import AppLayout from "./components/AppLayout.jsx";
+import LoadingPage from "./components/LoadingPage.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import MemoriesPage from "./pages/MemoriesPage.jsx";
+import SharedPage from "./pages/SharedPage.jsx";
+import MessagesPage from "./pages/MessagesPage.jsx";
+import NotificationsPage from "./pages/NotificationsPage.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
+import NewMemoryWizard from "./pages/NewMemoryWizard.jsx";
+import CreativeStudioPage from "./pages/CreativeStudioPage.jsx";
+import { getMyMemories, hasApiSession } from "./services/memoryApi.js";
 
-function App() {
-  const [count, setCount] = useState(0)
+const defaultUser={name:"Vigny",email:"vigny@example.com"};
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+export default function App(){
+  const [showLoader,setShowLoader]=useState(()=>sessionStorage.getItem("memories-loader-seen")!=="1");
+  const [page,setPage]=useState("dashboard");
+  const [theme,setTheme]=useState(()=>localStorage.getItem("memories-theme")||"light");
+  const [user]=useState(()=>{try{return JSON.parse(localStorage.getItem("user"))||JSON.parse(localStorage.getItem("memories-user"))||defaultUser}catch{return defaultUser}});
+  const [memories,setMemories]=useState([]);
+  const [refreshKey,setRefreshKey]=useState(0);
+  const [toast,setToast]=useState("");
 
-      <div className="ticks"></div>
+  useEffect(()=>localStorage.setItem("memories-theme",theme),[theme]);
+  useEffect(()=>{
+    if(!hasApiSession()){
+      setMemories(JSON.parse(localStorage.getItem("memories-demo-items")||"[]"));
+      return;
+    }
+    getMyMemories().then(r=>{
+      const d=r?.data?.memories??r?.data;
+      if(Array.isArray(d))setMemories(d);
+    }).catch(()=>{});
+  },[refreshKey]);
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+  const doneLoading=()=>{sessionStorage.setItem("memories-loader-seen","1");setShowLoader(false)};
+  const handleSaved=m=>{
+    setMemories(xs=>[m,...xs]);
+    setRefreshKey(k=>k+1);
+    setPage("dashboard");
+    setToast("Souvenir sauvegardé avec succès ♥");
+    setTimeout(()=>setToast(""),3000);
+  };
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  const handleLogout=()=>{
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("memories-user");
+    sessionStorage.removeItem("memories-loader-seen");
+    const loginUrl=import.meta.env.VITE_LOGIN_URL || "/login";
+    window.location.assign(loginUrl);
+  };
+
+  const content=useMemo(()=>{
+    if(page==="dashboard")return <Dashboard user={user} memories={memories} setPage={setPage}/>;
+    if(page==="memories")return <MemoriesPage refreshKey={refreshKey} onCreate={()=>setPage("new-memory")}/>;
+    if(page==="shared")return <SharedPage/>;
+    if(page==="messages")return <MessagesPage/>;
+    if(page==="notifications")return <NotificationsPage/>;
+    if(page==="settings")return <SettingsPage theme={theme} setTheme={setTheme}/>;
+    if(page==="studio")return <CreativeStudioPage memories={memories} user={user} setPage={setPage}/>;
+    if(page==="new-memory")return <NewMemoryWizard onCancel={()=>setPage("dashboard")} onSaved={handleSaved}/>;
+    return <Dashboard user={user} memories={memories} setPage={setPage}/>;
+  },[page,user,memories,refreshKey,theme]);
+
+  if(showLoader)return <LoadingPage theme={theme} onDone={doneLoading}/>;
+
+  return <>
+    <AppLayout page={page} setPage={setPage} theme={theme} setTheme={setTheme} user={user} onLogout={handleLogout}>
+      <div key={page} className="page-transition">{content}</div>
+    </AppLayout>
+    {toast&&<div className="toast-success">{toast}</div>}
+  </>;
 }
-
-export default App
