@@ -1,0 +1,2147 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap");
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "DM Sans", sans-serif;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* =========================================================
+   THEME
+========================================================= */
+
+.memories-page {
+  --red: #ef1740;
+  --red-dark: #c90e31;
+  --red-soft: #fff0f3;
+
+  --background: #f7f8fa;
+
+  --surface: #ffffff;
+  --surface-2: #f6f7f9;
+
+  --text: #09090b;
+  --secondary: #717987;
+
+  --border: #e7e9ee;
+
+  --shadow:
+    0 14px 35px
+    rgba(16, 24, 40, 0.07);
+
+  min-height: 100vh;
+
+  background: var(--background);
+  color: var(--text);
+
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+.memories-page.dark {
+  --red-soft:
+    rgba(239, 23, 64, 0.12);
+
+  --background: #081019;
+
+  --surface: #0d1722;
+  --surface-2: #111c28;
+
+  --text: #f7f9fb;
+  --secondary: #8995a5;
+
+  --border: #1d2b39;
+
+  --shadow:
+    0 16px 40px
+    rgba(0, 0, 0, 0.28);
+}
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+
+.memories-navbar {
+  width: 100%;
+  min-height: 72px;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 1000;
+
+  background:
+    rgba(255, 255, 255, 0.9);
+
+  border-bottom:
+    1px solid var(--border);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.memories-page.dark
+.memories-navbar {
+  background:
+    rgba(13, 23, 34, 0.9);
+}
+
+.memories-navbar-content {
+  width: min(1300px, 92%);
+  min-height: 72px;
+
+  margin: auto;
+
+  display: flex;
+  align-items: center;
+}
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.memories-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.memories-logo-icon {
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: var(--red-soft);
+
+  border:
+    1px solid
+    rgba(239, 23, 64, 0.18);
+
+  color: var(--red);
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.memories-logo-text {
+  font-family:
+    "Playfair Display",
+    serif;
+
+  font-size: 21px;
+  font-weight: 700;
+
+  color: var(--text);
+}
+
+.memories-logo-text span {
+  color: var(--red);
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.memories-nav-links {
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.memories-nav-links a {
+  min-height: 38px;
+
+  padding: 0 12px;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 20px;
+
+  color: var(--secondary);
+
+  font-size: 10px;
+  font-weight: 500;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.memories-nav-links a span {
+  color: var(--red);
+}
+
+.memories-nav-links a:hover {
+  color: var(--red);
+
+  background: var(--red-soft);
+
+  border-color:
+    rgba(239, 23, 64, 0.22);
+
+  transform:
+    translateY(-1px);
+}
+
+.memories-nav-links a.active {
+  color: var(--red);
+
+  background: var(--red-soft);
+
+  border-color:
+    rgba(239, 23, 64, 0.3);
+}
+
+.memories-nav-actions {
+  margin-left: 18px;
+}
+
+/* =========================================================
+   THEME SWITCH
+========================================================= */
+
+.theme-switch {
+  width: 74px;
+  height: 38px;
+
+  position: relative;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff1bf,
+      #fffaf0
+    );
+
+  overflow: hidden;
+
+  transition: 0.3s ease;
+}
+
+.theme-switch.active {
+  background:
+    linear-gradient(
+      135deg,
+      #111827,
+      #253247
+    );
+}
+
+.theme-sun,
+.theme-moon {
+  position: absolute;
+
+  top: 50%;
+
+  transform:
+    translateY(-50%);
+
+  font-size: 12px;
+}
+
+.theme-sun {
+  left: 11px;
+  color: #f59e0b;
+}
+
+.theme-moon {
+  right: 11px;
+  color: #c1c8ff;
+}
+
+.theme-circle {
+  width: 30px;
+  height: 30px;
+
+  position: absolute;
+
+  top: 3px;
+  left: 4px;
+
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: white;
+
+  color: #f59e0b;
+
+  box-shadow:
+    0 4px 12px
+    rgba(15, 23, 42, 0.18);
+
+  transition:
+    left 0.3s ease,
+    transform 0.3s ease,
+    background 0.3s ease;
+}
+
+.theme-switch.active
+.theme-circle {
+  left: 38px;
+
+  transform:
+    rotate(360deg);
+
+  color: white;
+
+  background: #28364b;
+}
+
+/* =========================================================
+   CONTAINER
+========================================================= */
+
+.memories-container {
+  width: min(1250px, 92%);
+
+  margin: auto;
+
+  padding:
+    46px 0 85px;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.memories-header {
+  margin-bottom: 25px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content:
+    space-between;
+
+  gap: 24px;
+}
+
+.small-red-title {
+  color: var(--red);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 1.2px;
+}
+
+.memories-header h1 {
+  margin:
+    7px 0 8px;
+
+  font-family:
+    "Playfair Display",
+    serif;
+
+  font-size: 40px;
+
+  color: var(--text);
+}
+
+.memories-header h1 span {
+  color: var(--red);
+}
+
+.memories-header p {
+  max-width: 520px;
+
+  color: var(--secondary);
+
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.create-memory-button {
+  min-height: 42px;
+
+  padding:
+    0 16px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: var(--red);
+
+  color: white;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  box-shadow:
+    0 8px 20px
+    rgba(239, 23, 64, 0.18);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.create-memory-button:hover {
+  background: var(--red-dark);
+
+  transform:
+    translateY(-2px);
+}
+
+.create-memory-button span {
+  font-size: 18px;
+}
+
+/* =========================================================
+   API ERROR
+========================================================= */
+
+.memories-api-error {
+  margin-bottom: 18px;
+
+  padding: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content:
+    space-between;
+
+  gap: 15px;
+
+  border:
+    1px solid
+    rgba(239, 23, 64, 0.22);
+
+  border-radius: 10px;
+
+  background:
+    rgba(239, 23, 64, 0.08);
+
+  color: var(--red);
+}
+
+.memories-api-error strong {
+  display: block;
+
+  font-size: 9px;
+}
+
+.memories-api-error p {
+  margin-top: 3px;
+
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.memories-api-error button {
+  min-height: 34px;
+
+  padding:
+    0 12px;
+
+  flex-shrink: 0;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background: var(--red);
+
+  color: white;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
+
+.memories-layout {
+  display: grid;
+
+  grid-template-columns:
+    230px 1fr;
+
+  align-items: start;
+
+  gap: 18px;
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.memory-sidebar {
+  padding: 17px;
+
+  position: sticky;
+
+  top: 90px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 13px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow);
+}
+
+.sidebar-heading {
+  padding:
+    3px 5px 15px;
+}
+
+.sidebar-heading span {
+  color: var(--red);
+
+  font-size: 8px;
+  font-weight: 700;
+
+  letter-spacing: 1px;
+}
+
+.sidebar-heading h2 {
+  margin-top: 4px;
+
+  color: var(--text);
+
+  font-size: 15px;
+}
+
+/* =========================================================
+   TYPE CARDS VERTICALES
+========================================================= */
+
+.memory-types-column {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.memory-type-card {
+  width: 100%;
+  min-height: 74px;
+
+  padding: 11px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  text-align: left;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 10px;
+
+  background: var(--surface-2);
+
+  color: var(--text);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.memory-type-card:hover {
+  transform:
+    translateX(3px);
+
+  border-color:
+    rgba(239, 23, 64, 0.3);
+}
+
+.memory-type-card.active {
+  border-color:
+    rgba(239, 23, 64, 0.65);
+
+  background: var(--red-soft);
+}
+
+.memory-type-icon {
+  width: 40px;
+  height: 40px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: var(--red-soft);
+
+  color: var(--red);
+
+  font-size: 17px;
+}
+
+.memory-type-info {
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.memory-type-info strong {
+  color: var(--text);
+
+  font-size: 10px;
+}
+
+.memory-type-info span {
+  margin-top: 3px;
+
+  color: var(--secondary);
+
+  font-size: 7px;
+}
+
+.memory-type-count {
+  width: 25px;
+  height: 25px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--surface);
+
+  color: var(--secondary);
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.memory-type-card.active
+.memory-type-count {
+  background: var(--red);
+
+  color: white;
+}
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.memories-content {
+  padding: 20px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 13px;
+
+  background: var(--surface);
+
+  box-shadow: var(--shadow);
+
+  min-width: 0;
+}
+
+/* =========================================================
+   TOOLBAR
+========================================================= */
+
+.memories-toolbar {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.search-box {
+  min-height: 41px;
+
+  flex: 1;
+
+  padding:
+    0 13px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 8px;
+
+  background: var(--surface-2);
+}
+
+.search-box span {
+  color: var(--red);
+
+  font-size: 17px;
+}
+
+.search-box input {
+  width: 100%;
+
+  border: none;
+
+  outline: none;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-size: 9px;
+}
+
+.search-box input::placeholder {
+  color: var(--secondary);
+}
+
+.sort-select {
+  min-height: 41px;
+
+  padding:
+    0 13px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 8px;
+
+  outline: none;
+
+  background: var(--surface-2);
+
+  color: var(--text);
+
+  font-size: 9px;
+}
+
+/* =========================================================
+   RESULTS HEADER
+========================================================= */
+
+.results-heading {
+  margin:
+    25px 0 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content:
+    space-between;
+
+  gap: 12px;
+}
+
+.results-heading h2 {
+  color: var(--text);
+
+  font-size: 15px;
+}
+
+.results-heading p {
+  margin-top: 3px;
+
+  color: var(--secondary);
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   REFRESH BUTTON
+========================================================= */
+
+.refresh-memories-button {
+  min-height: 34px;
+
+  padding:
+    0 11px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 7px;
+
+  background: var(--surface-2);
+
+  color: var(--text);
+
+  font-size: 8px;
+  font-weight: 600;
+
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.refresh-memories-button:hover:not(:disabled) {
+  color: var(--red);
+
+  border-color:
+    rgba(239, 23, 64, 0.3);
+
+  transform:
+    translateY(-1px);
+}
+
+.refresh-memories-button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.5;
+}
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.memories-loading {
+  min-height: 360px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.memories-spinner {
+  width: 38px;
+  height: 38px;
+
+  margin-bottom: 14px;
+
+  border:
+    3px solid
+    rgba(239, 23, 64, 0.13);
+
+  border-top-color: var(--red);
+
+  border-radius: 50%;
+
+  animation:
+    memories-spin
+    0.8s
+    linear
+    infinite;
+}
+
+.memories-loading strong {
+  color: var(--text);
+
+  font-size: 10px;
+}
+
+.memories-loading p {
+  margin-top: 5px;
+
+  color: var(--secondary);
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.memories-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 13px;
+}
+
+/* =========================================================
+   MEMORY CARD
+========================================================= */
+
+.memory-card {
+  overflow: hidden;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 12px;
+
+  background: var(--surface);
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.memory-card:hover {
+  transform:
+    translateY(-4px);
+
+  border-color:
+    rgba(239, 23, 64, 0.28);
+
+  box-shadow: var(--shadow);
+}
+
+/* =========================================================
+   COVER
+========================================================= */
+
+.memory-cover {
+  height: 175px;
+
+  position: relative;
+
+  overflow: hidden;
+
+  background: var(--surface-2);
+}
+
+.memory-cover > img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition:
+    transform 0.4s ease;
+}
+
+.memory-card:hover
+.memory-cover > img {
+  transform:
+    scale(1.04);
+}
+
+.memory-cover-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.02),
+      rgba(0, 0, 0, 0.34)
+    );
+}
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.memory-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(239, 23, 64, 0.12),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      var(--surface-2),
+      var(--red-soft)
+    );
+}
+
+.memory-placeholder-icon {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: var(--surface);
+
+  border:
+    1px solid var(--border);
+
+  color: var(--red);
+
+  font-size: 23px;
+
+  box-shadow:
+    0 8px 20px
+    rgba(16, 24, 40, 0.07);
+}
+
+.memory-placeholder span {
+  color: var(--secondary);
+
+  font-family:
+    "Playfair Display",
+    serif;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   FORMAT BADGE
+========================================================= */
+
+.memory-format {
+  position: absolute;
+
+  top: 10px;
+  left: 10px;
+
+  z-index: 3;
+
+  min-height: 27px;
+
+  padding:
+    0 9px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  border-radius: 15px;
+
+  background:
+    rgba(255, 255, 255, 0.92);
+
+  color: #111;
+
+  font-size: 8px;
+  font-weight: 600;
+
+  backdrop-filter: blur(7px);
+}
+
+.memory-format span {
+  color: var(--red);
+}
+
+/* =========================================================
+   VIDEO PLAY BUTTON
+========================================================= */
+
+.video-play-button {
+  width: 48px;
+  height: 48px;
+
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  z-index: 3;
+
+  transform:
+    translate(-50%, -50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background:
+    rgba(239, 23, 64, 0.94);
+
+  color: white;
+
+  font-size: 14px;
+
+  box-shadow:
+    0 8px 20px
+    rgba(0, 0, 0, 0.2);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.video-play-button:hover {
+  transform:
+    translate(-50%, -50%)
+    scale(1.08);
+
+  background: var(--red-dark);
+}
+
+/* =========================================================
+   GENERATION BADGES
+========================================================= */
+
+.generation-badge {
+  position: absolute;
+
+  right: 10px;
+  bottom: 10px;
+
+  z-index: 3;
+
+  min-height: 25px;
+
+  padding:
+    0 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  font-size: 7px;
+  font-weight: 700;
+
+  backdrop-filter: blur(6px);
+}
+
+.generation-badge.completed {
+  background:
+    rgba(20, 130, 75, 0.9);
+
+  color: white;
+}
+
+.generation-badge.generating {
+  background:
+    rgba(239, 23, 64, 0.9);
+
+  color: white;
+}
+
+.generation-badge.pending {
+  background:
+    rgba(245, 158, 11, 0.9);
+
+  color: white;
+}
+
+.generation-badge.failed {
+  background:
+    rgba(170, 20, 45, 0.94);
+
+  color: white;
+}
+
+/* =========================================================
+   CARD CONTENT
+========================================================= */
+
+.memory-card-content {
+  padding: 15px;
+}
+
+.memory-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content:
+    space-between;
+
+  gap: 10px;
+}
+
+.memory-title-row > div {
+  min-width: 0;
+}
+
+.memory-title-row h3 {
+  color: var(--text);
+
+  font-size: 12px;
+
+  word-break: break-word;
+}
+
+.memory-title-row p {
+  margin-top: 4px;
+
+  color: var(--secondary);
+
+  font-size: 7px;
+}
+
+.memory-card-description {
+  margin-top: 11px;
+
+  min-height: 39px;
+
+  color: var(--secondary);
+
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   VISIBILITY BADGES
+========================================================= */
+
+.visibility-badge {
+  flex-shrink: 0;
+
+  padding:
+    5px 8px;
+
+  border-radius: 15px;
+
+  font-size: 7px;
+  font-weight: 600;
+}
+
+.visibility-badge.public {
+  color: #168149;
+
+  background:
+    rgba(22, 129, 73, 0.1);
+}
+
+.memories-page.dark
+.visibility-badge.public {
+  color: #6dde9d;
+
+  background:
+    rgba(22, 129, 73, 0.14);
+}
+
+.visibility-badge.private {
+  color: var(--secondary);
+
+  background:
+    var(--surface-2);
+
+  border:
+    1px solid var(--border);
+}
+
+/* =========================================================
+   VIEW BUTTON
+========================================================= */
+
+.memory-view-button {
+  width: 100%;
+  min-height: 35px;
+
+  margin-top: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background: var(--red);
+
+  color: white;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.memory-view-button:hover {
+  background: var(--red-dark);
+
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.memory-actions {
+  margin-top: 8px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 6px;
+}
+
+.memory-action-button,
+.memory-delete-button {
+  min-height: 32px;
+
+  padding:
+    0 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  border-radius: 7px;
+
+  font-size: 7px;
+  font-weight: 600;
+
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.memory-action-button {
+  border:
+    1px solid var(--border);
+
+  background: var(--surface-2);
+
+  color: var(--text);
+}
+
+.memory-action-button span {
+  color: var(--red);
+
+  font-size: 10px;
+}
+
+.memory-action-button:hover {
+  color: var(--red);
+
+  border-color:
+    rgba(239, 23, 64, 0.3);
+
+  transform:
+    translateY(-1px);
+}
+
+.memory-delete-button {
+  border:
+    1px solid
+    rgba(239, 23, 64, 0.2);
+
+  background: var(--red-soft);
+
+  color: var(--red);
+}
+
+.memory-delete-button:hover {
+  background:
+    rgba(239, 23, 64, 0.15);
+
+  transform:
+    translateY(-1px);
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-memory {
+  min-height: 350px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.empty-icon {
+  width: 58px;
+  height: 58px;
+
+  margin-bottom: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: var(--red-soft);
+
+  color: var(--red);
+
+  font-size: 24px;
+}
+
+.empty-memory h3 {
+  color: var(--text);
+
+  font-size: 13px;
+}
+
+.empty-memory p {
+  margin:
+    6px 0 15px;
+
+  color: var(--secondary);
+
+  font-size: 9px;
+}
+
+.empty-memory button,
+.empty-create-button {
+  min-height: 36px;
+
+  padding:
+    0 13px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background: var(--red);
+
+  color: white;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   MODAL OVERLAY
+========================================================= */
+
+.modal-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 5000;
+
+  padding: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    rgba(6, 11, 17, 0.6);
+
+  backdrop-filter:
+    blur(5px);
+
+  animation:
+    modal-background
+    0.2s ease;
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.memory-modal {
+  width:
+    min(470px, 100%);
+
+  padding: 28px;
+
+  position: relative;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 14px;
+
+  background: var(--surface);
+
+  box-shadow:
+    0 30px 80px
+    rgba(0, 0, 0, 0.28);
+
+  animation:
+    modal-appear
+    0.25s ease;
+}
+
+.modal-close {
+  width: 30px;
+  height: 30px;
+
+  position: absolute;
+
+  top: 15px;
+  right: 15px;
+
+  border: none;
+
+  border-radius: 50%;
+
+  background: var(--surface-2);
+
+  color: var(--secondary);
+
+  font-size: 17px;
+}
+
+.modal-close:hover {
+  color: var(--red);
+}
+
+.modal-icon {
+  width: 45px;
+  height: 45px;
+
+  margin-bottom: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: var(--red-soft);
+
+  color: var(--red);
+
+  font-size: 19px;
+}
+
+.memory-modal h2 {
+  margin:
+    5px 0 8px;
+
+  font-family:
+    "Playfair Display",
+    serif;
+
+  color: var(--text);
+
+  font-size: 23px;
+}
+
+.modal-description {
+  color: var(--secondary);
+
+  font-size: 9px;
+  line-height: 1.6;
+}
+
+.modal-description strong {
+  color: var(--text);
+}
+
+/* =========================================================
+   SHARE WARNING
+========================================================= */
+
+.share-warning {
+  margin-top: 17px;
+
+  padding: 12px;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  border:
+    1px solid
+    rgba(239, 23, 64, 0.18);
+
+  border-radius: 8px;
+
+  background: var(--red-soft);
+}
+
+.share-warning > span {
+  font-size: 15px;
+}
+
+.share-warning strong {
+  display: block;
+
+  color: var(--text);
+
+  font-size: 8px;
+}
+
+.share-warning p {
+  margin-top: 3px;
+
+  color: var(--secondary);
+
+  font-size: 7px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   SHARE LINK
+========================================================= */
+
+.share-link-box {
+  margin-top: 18px;
+
+  display: flex;
+
+  gap: 7px;
+}
+
+.share-link-box input {
+  min-width: 0;
+
+  flex: 1;
+
+  padding:
+    11px 12px;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 7px;
+
+  outline: none;
+
+  background: var(--surface-2);
+
+  color: var(--secondary);
+
+  font-size: 8px;
+}
+
+.share-link-box button {
+  padding:
+    0 13px;
+
+  border: none;
+
+  border-radius: 7px;
+
+  background: var(--red);
+
+  color: white;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   MODAL ACTIONS
+========================================================= */
+
+.modal-actions {
+  margin-top: 22px;
+
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 8px;
+}
+
+.modal-secondary,
+.modal-primary,
+.modal-delete-button {
+  min-height: 37px;
+
+  padding:
+    0 13px;
+
+  border-radius: 7px;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.modal-secondary {
+  border:
+    1px solid var(--border);
+
+  background: var(--surface-2);
+
+  color: var(--secondary);
+}
+
+.modal-primary {
+  border: none;
+
+  background: var(--red);
+
+  color: white;
+}
+
+.modal-primary:hover {
+  background: var(--red-dark);
+}
+
+.modal-delete-button {
+  border: none;
+
+  background: var(--red);
+
+  color: white;
+}
+
+.modal-delete-button:hover {
+  background: var(--red-dark);
+}
+
+/* =========================================================
+   VISIBILITY OPTIONS
+========================================================= */
+
+.visibility-options {
+  margin-top: 20px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.visibility-option {
+  width: 100%;
+  min-height: 75px;
+
+  padding: 11px;
+
+  display: grid;
+
+  grid-template-columns:
+    40px 1fr 24px;
+
+  align-items: center;
+
+  gap: 10px;
+
+  text-align: left;
+
+  border:
+    1px solid var(--border);
+
+  border-radius: 9px;
+
+  background: var(--surface-2);
+
+  color: var(--text);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.visibility-option:hover {
+  border-color:
+    rgba(239, 23, 64, 0.3);
+}
+
+.visibility-option.selected {
+  border-color: var(--red);
+
+  background: var(--red-soft);
+}
+
+.visibility-option-icon {
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: var(--surface);
+
+  font-size: 16px;
+}
+
+.visibility-option strong {
+  color: var(--text);
+
+  font-size: 9px;
+}
+
+.visibility-option p {
+  margin-top: 3px;
+
+  color: var(--secondary);
+
+  font-size: 7px;
+  line-height: 1.45;
+}
+
+.visibility-radio {
+  width: 18px;
+  height: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  border:
+    1px solid var(--border);
+
+  background: var(--surface);
+}
+
+.visibility-radio span {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: var(--red);
+}
+
+.visibility-option.selected
+.visibility-radio {
+  border-color: var(--red);
+}
+
+/* =========================================================
+   DELETE MODAL
+========================================================= */
+
+.delete-modal .delete-icon {
+  background:
+    rgba(239, 23, 64, 0.1);
+
+  color: var(--red);
+}
+
+.delete-warning {
+  margin-top: 16px;
+
+  padding: 11px;
+
+  border:
+    1px solid
+    rgba(239, 23, 64, 0.16);
+
+  border-radius: 8px;
+
+  background: var(--red-soft);
+
+  color: var(--red);
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   DARK SELECT
+========================================================= */
+
+.memories-page.dark
+.sort-select option {
+  background: #0d1722;
+
+  color: #f7f9fb;
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes memories-spin {
+  from {
+    transform:
+      rotate(0deg);
+  }
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(15px)
+      scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+@keyframes modal-background {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1050px) {
+  .memories-nav-links {
+    display: none;
+  }
+
+  .memories-nav-actions {
+    margin-left: auto;
+  }
+
+  .memories-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 760px) {
+  .memories-container {
+    padding-top: 32px;
+  }
+
+  .memories-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .memories-header h1 {
+    font-size: 34px;
+  }
+
+  .memories-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-sidebar {
+    position: static;
+  }
+
+  .memory-types-column {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .memory-type-card:hover {
+    transform:
+      translateY(-2px);
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 550px) {
+  .memories-navbar-content,
+  .memories-container {
+    width:
+      calc(100% - 24px);
+  }
+
+  .memories-logo-text {
+    font-size: 18px;
+  }
+
+  .theme-switch {
+    width: 66px;
+  }
+
+  .theme-switch.active
+  .theme-circle {
+    left: 31px;
+  }
+
+  .memories-header h1 {
+    font-size: 30px;
+  }
+
+  .memory-types-column {
+    grid-template-columns: 1fr;
+  }
+
+  .memories-content {
+    padding: 14px;
+  }
+
+  .memories-toolbar {
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .search-box,
+  .sort-select {
+    width: 100%;
+  }
+
+  .results-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .refresh-memories-button {
+    width: 100%;
+  }
+
+  .memory-cover {
+    height: 190px;
+  }
+
+  .memory-title-row {
+    flex-direction: column;
+  }
+
+  .memory-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .share-link-box {
+    flex-direction: column;
+  }
+
+  .share-link-box button {
+    min-height: 37px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+
+  .memory-modal {
+    padding: 22px 18px;
+  }
+
+  .visibility-option {
+    grid-template-columns:
+      36px 1fr 20px;
+  }
+
+  .visibility-option-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+
+    animation-duration:
+      0.01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.01ms !important;
+  }
+}
