@@ -12,20 +12,26 @@ async function create(data) {
 }
 async function findById(id) {
   const [rows] = await db.execute(
-    `SELECT m.*, u.nom AS owner_name, u.photo AS owner_photo
+    `SELECT m.*, u.nom AS owner_name, u.photo AS owner_photo,
+      (SELECT mp.image_url FROM memory_photos mp WHERE mp.memory_id=m.id ORDER BY mp.sort_order, mp.id LIMIT 1) AS image_url
      FROM memories m JOIN users u ON u.id = m.owner_id WHERE m.id = ? LIMIT 1`, [id]
   );
   return rows[0] || null;
 }
 async function mine(ownerId) {
-  const [rows] = await db.execute("SELECT * FROM memories WHERE owner_id = ? ORDER BY created_at DESC", [ownerId]);
+  const [rows] = await db.execute(
+    `SELECT m.*,
+      (SELECT mp.image_url FROM memory_photos mp WHERE mp.memory_id=m.id ORDER BY mp.sort_order, mp.id LIMIT 1) AS image_url
+     FROM memories m WHERE m.owner_id = ? ORDER BY m.created_at DESC`, [ownerId]
+  );
   return rows;
 }
 async function shared() {
   const [rows] = await db.execute(
     `SELECT m.*, u.nom AS owner_name, u.photo AS owner_photo,
       (SELECT COUNT(*) FROM reactions r WHERE r.memory_id = m.id) AS reactions_count,
-      (SELECT COUNT(*) FROM comments c WHERE c.memory_id = m.id) AS comments_count
+      (SELECT COUNT(*) FROM comments c WHERE c.memory_id = m.id) AS comments_count,
+      (SELECT mp.image_url FROM memory_photos mp WHERE mp.memory_id=m.id ORDER BY mp.sort_order, mp.id LIMIT 1) AS image_url
      FROM memories m JOIN users u ON u.id = m.owner_id
      WHERE m.access_level = 'public' ORDER BY m.created_at DESC`
   );
@@ -36,6 +42,10 @@ async function updateAccess(id, ownerId, access) {
   return r.affectedRows > 0;
 }
 async function remove(id, ownerId) {
+  const [owned] = await db.execute("SELECT id FROM memories WHERE id=? AND owner_id=? LIMIT 1", [id, ownerId]);
+  if (!owned.length) return false;
+  // Compatible aussi avec les anciennes bases où memory_attachments n'a pas de FK.
+  try { await db.execute("DELETE FROM memory_attachments WHERE memory_id=?", [id]); } catch {}
   const [r] = await db.execute("DELETE FROM memories WHERE id = ? AND owner_id = ?", [id, ownerId]);
   return r.affectedRows > 0;
 }
@@ -56,7 +66,27 @@ async function characters(memoryId) {
   const [rows] = await db.execute("SELECT * FROM comic_characters WHERE memory_id = ? ORDER BY id", [memoryId]);
   return rows;
 }
+
+async function addAttachments(memoryId, files) {
+  for (const file of files) {
+    let category = "other";
+    if (file.mimetype.startsWith("image/")) category = "image";
+    else if (file.mimetype.startsWith("video/")) category = "video";
+    else if (file.mimetype.startsWith("audio/")) category = "audio";
+    else if (file.mimetype.includes("pdf") || file.mimetype.includes("word") || file.mimetype.includes("excel") || file.mimetype.startsWith("text/")) category = "document";
+    await db.execute(
+      "INSERT INTO memory_attachments (memory_id, file_url, original_name, mime_type, category, size_bytes) VALUES (?, ?, ?, ?, ?, ?)",
+      [memoryId, `/uploads/files/${file.filename}`, file.originalname || file.filename, file.mimetype || "application/octet-stream", category, file.size || 0],
+    );
+  }
+}
+
+async function attachments(memoryId) {
+  const [rows] = await db.execute("SELECT * FROM memory_attachments WHERE memory_id=? ORDER BY created_at, id", [memoryId]);
+  return rows;
+}
+
 async function setGenerationStatus(id, status, generatedTitle = null) {
   await db.execute("UPDATE memories SET generation_status = ?, generated_title = COALESCE(?, generated_title) WHERE id = ?", [status, generatedTitle, id]);
 }
-module.exports = { create, findById, mine, shared, updateAccess, remove, addPhotos, photos, addCharacter, characters, setGenerationStatus };
+module.exports = { create, findById, mine, shared, updateAccess, remove, addPhotos, photos, addCharacter, characters, addAttachments, attachments, setGenerationStatus };

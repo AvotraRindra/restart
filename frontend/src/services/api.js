@@ -1,52 +1,47 @@
-export const API_URL = "http://localhost:5000";
+export const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
+
+export function getToken() {
+  return localStorage.getItem("token") || "";
+}
+
+export function clearSession() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  localStorage.removeItem("memories-user");
+}
 
 export async function apiFetch(path, options = {}) {
-  const token = localStorage.getItem("token");
+  const token = getToken();
+  const headers = new Headers(options.headers || {});
 
-  const headers = {
-    ...(options.headers || {}),
-  };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
-  if (
-    options.body &&
-    !(options.body instanceof FormData)
-  ) {
-    headers["Content-Type"] ??= "application/json";
-  }
-
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
-
-  let result;
-
+  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  let payload;
   try {
-    result = await response.json();
+    payload = await response.json();
   } catch {
-    result = {
-      message: "Réponse invalide du serveur",
-    };
+    payload = { success: false, message: "Réponse serveur invalide." };
   }
 
-  if (response.status === 401) {
-    localStorage.removeItem("token");
-  }
+  if (response.status === 401) clearSession();
 
-  if (!response.ok) {
-    const error = new Error(
-      result.message || "Erreur API"
-    );
-
+  if (!response.ok || payload?.success === false) {
+    const error = new Error(payload?.message || `Erreur HTTP ${response.status}`);
     error.status = response.status;
-    error.result = result;
-
+    error.details = payload?.details;
+    error.payload = payload;
     throw error;
   }
 
-  return result;
+  return payload;
+}
+
+export function mediaUrl(path) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }

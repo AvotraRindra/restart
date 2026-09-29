@@ -1,7 +1,7 @@
 {
   "name": "restart-backend",
-  "version": "1.0.0",
-  "description": "Backend MVC de RE:START - WebCup",
+  "version": "1.2.0",
+  "description": "Backend MVC sécurisé de RE:START - WebCup",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
@@ -13,10 +13,13 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
     "groq-sdk": "^1.6.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.14.5",
+    "nodemailer": "^7.0.6",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

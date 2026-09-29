@@ -1,9 +1,2 @@
-import { Link } from "react-router";
-
-function Register() {
-    return(
-        <h1>register</h1>
-
-    );
-}
-export default Register;
+import Auth from "./Auth.jsx";
+export default function Register(){ return <Auth initialMode="register" />; }

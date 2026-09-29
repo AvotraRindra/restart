@@ -93,3 +93,15 @@ exports.addCharacter = async (req, res, next) => {
     res.status(201).json({ success: true, data: { id, name: req.body.name, image_url: imageUrl } });
   } catch (e) { next(e); }
 };
+
+
+exports.addAttachments = async (req, res, next) => {
+  try {
+    const memory = await Memory.findById(req.params.id);
+    if (!memory || Number(memory.owner_id) !== Number(req.user.id)) return res.status(404).json({ success: false, message: "Souvenir introuvable." });
+    const files = req.files || [];
+    if (!files.length) return res.status(400).json({ success: false, message: "Aucune pièce jointe reçue." });
+    await Memory.addAttachments(memory.id, files);
+    res.status(201).json({ success: true, data: await Memory.attachments(memory.id) });
+  } catch (e) { next(e); }
+};

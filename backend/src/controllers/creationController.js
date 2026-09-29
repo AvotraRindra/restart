@@ -41,6 +41,7 @@ exports.getCreation = async (req, res, next) => {
         memory,
         photos: await Memory.photos(memory.id),
         characters: memory.memory_type === "bd" ? await Memory.characters(memory.id) : [],
+        attachments: await Memory.attachments(memory.id),
         creation: await Creation.get(memory),
       },
     });

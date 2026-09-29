@@ -21,4 +21,8 @@ async function markRead(id, userId) {
   const [r] = await db.execute("UPDATE notifications SET is_read=1 WHERE id=? AND user_id=?", [id, userId]);
   return r.affectedRows > 0;
 }
-module.exports = { create, list, markRead };
+async function markAllRead(userId) {
+  const [r] = await db.execute("UPDATE notifications SET is_read=1 WHERE user_id=? AND is_read=0", [userId]);
+  return r.affectedRows;
+}
+module.exports = { create, list, markRead, markAllRead };

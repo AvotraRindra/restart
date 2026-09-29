@@ -1,9 +1,2 @@
-import { Link } from "react-router";
-
-function Login() {
-    return(
-        <h1>login</h1>
-
-    );
-}
-export default Login;
+import Auth from "./Auth.jsx";
+export default function Login(){ return <Auth initialMode="login" />; }

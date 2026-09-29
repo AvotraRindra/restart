@@ -8,6 +8,7 @@ router.get("/mine", auth, c.mine);
 router.get("/shared", auth, c.shared);
 router.post("/:id/photos", auth, upload.images.array("photos", 10), c.addPhotos);
 router.post("/:id/characters", auth, upload.images.single("image"), c.addCharacter);
+router.post("/:id/attachments", auth, upload.attachments.array("attachments", 8), c.addAttachments);
 router.patch("/:id/access", auth, c.updateAccess);
 router.get("/:id", auth, c.getOne);
 router.delete("/:id", auth, c.remove);

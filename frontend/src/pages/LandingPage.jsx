@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./Landing.css";
+import "./landing.css";
 import { Link } from "react-router-dom";
 function Landing() {
   const [darkMode, setDarkMode] = useState(false);
@@ -55,14 +55,6 @@ function Landing() {
               <span className="nav-icon">✦</span>
               Fonctionnalités
             </a>
-            <a href="#Explorer">
-              <span classsName="nav-icon">✦</span>
-              Explorer
-              </a>
-            <a href="/MesSouvenirs">
-              <span>▧</span>
-             Mes souvenirs
-             </a>
             <a href="#apropos">
               <span className="nav-icon">ⓘ</span>
               À propos
@@ -85,13 +77,9 @@ function Landing() {
               <span className="theme-icon moon">☾</span>
             </button>
 
-            <button className="login-button">
-              Se connecter
-            </button>
+            <Link className="login-button" to="/login">Se connecter</Link>
 
-            <button className="register-button">
-              S'inscrire
-            </button>
+            <Link className="register-button" to="/register">S'inscrire</Link>
           </div>
         </div>
       </header>
@@ -128,10 +116,10 @@ function Landing() {
             </p>
 
             <div className="hero-buttons">
-              <button className="primary-button">
+              <Link className="primary-button" to="/register">
                 Commencer gratuitement
                 <span>→</span>
-              </button>
+              </Link>
 
               <button className="secondary-button">
                 <span className="play-icon">▶</span>
@@ -319,10 +307,10 @@ function Landing() {
               </div>
             </div>
 
-            <button className="primary-button">
+            <Link className="primary-button" to="/register">
               Créer un souvenir
               <span>→</span>
-            </button>
+            </Link>
           </div>
         </section>
 
@@ -393,10 +381,10 @@ function Landing() {
               votre souvenir en une histoire illustrée originale.
             </p>
 
-            <button className="primary-button">
+            <Link className="primary-button" to="/register">
               Découvrir la fonctionnalité
               <span>→</span>
-            </button>
+            </Link>
           </div>
 
           <div className="comic-cards">
@@ -455,10 +443,10 @@ function Landing() {
             </p>
           </div>
 
-          <button className="primary-button">
+          <Link className="primary-button" to="/register">
             Créer un compte gratuitement
             <span>→</span>
-          </button>
+          </Link>
         </section>
 
         {/* =========================

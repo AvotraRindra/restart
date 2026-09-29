@@ -4,7 +4,7 @@ import {
   useState,
 } from "react";
 
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 import "../styles/Auth.css";
 
@@ -14,6 +14,8 @@ import logo from "../assets/Logo.png";
 import {
   loginUser,
   registerUser,
+  oauthUrl,
+  resendVerification,
 } from "../services/AuthServices.js";
 
 
@@ -42,6 +44,8 @@ export default function Auth({
 
   const [error, setError] =
     useState("");
+
+  const [success, setSuccess] = useState("");
 
 
   /* =========================================
@@ -111,6 +115,9 @@ export default function Auth({
   useEffect(() => {
     setMode(initialMode);
     setError("");
+    const pendingSuccess = sessionStorage.getItem("auth-success") || "";
+    if (pendingSuccess) sessionStorage.removeItem("auth-success");
+    setSuccess(pendingSuccess);
     setGenderOpen(false);
   }, [initialMode]);
 
@@ -158,6 +165,7 @@ export default function Auth({
     }
 
     setError("");
+    setSuccess("");
     setGenderOpen(false);
     setIsAnimating(true);
 
@@ -195,6 +203,7 @@ export default function Auth({
     } = event.target;
 
     setError("");
+    setSuccess("");
 
     setLoginData((prev) => ({
       ...prev,
@@ -216,6 +225,7 @@ export default function Auth({
     } = event.target;
 
     setError("");
+    setSuccess("");
 
     setRegisterData((prev) => ({
       ...prev,
@@ -237,6 +247,7 @@ export default function Auth({
     }));
 
     setError("");
+    setSuccess("");
     setGenderOpen(false);
   };
 
@@ -303,10 +314,6 @@ export default function Auth({
       const response =
         await loginUser(credentials);
 
-      console.log(
-        "LOGIN RESPONSE :",
-        response
-      );
 
       /*
         Réponse attendue :
@@ -321,8 +328,7 @@ export default function Auth({
       */
 
       saveAuthentication(response);
-
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error(
         "Erreur login :",
@@ -425,22 +431,12 @@ export default function Auth({
       };
 
 
-      console.log(
-        "REGISTER DATA :",
-        userToSend
-      );
-
 
       const response =
         await registerUser(
           userToSend
         );
 
-
-      console.log(
-        "REGISTER RESPONSE :",
-        response
-      );
 
 
       /*
@@ -459,9 +455,15 @@ export default function Auth({
         }
       */
 
-      saveAuthentication(response);
-
-      navigate("/dashboard");
+      if (response?.data?.token) {
+        saveAuthentication(response);
+        navigate("/dashboard", { replace: true });
+      } else {
+        const message = response?.message || "Compte créé. Consultez votre e-mail pour le vérifier.";
+        sessionStorage.setItem("auth-success", message);
+        setLoginData((prev) => ({ ...prev, email: registerData.email.trim() }));
+        navigate("/login", { replace: true });
+      }
 
     } catch (err) {
       console.error(
@@ -661,8 +663,10 @@ export default function Auth({
               {error && !isRegister && (
                 <div className="auth-error">
                   {error}
+                  {loginData.email && /vérifi/i.test(error) && <button type="button" className="auth-resend-link" onClick={async () => { try { const r = await resendVerification(loginData.email); setSuccess(r.message); setError(""); } catch (e) { setError(e.message); } }}>Renvoyer l'e-mail</button>}
                 </div>
               )}
+              {success && !isRegister && <div className="auth-success">{success}</div>}
 
 
               <form
@@ -760,6 +764,7 @@ export default function Auth({
                   <button
                     type="button"
                     className="auth-forgot-password"
+                    onClick={() => navigate("/forgot-password")}
                   >
                     Mot de passe oublié ?
                   </button>
@@ -875,10 +880,9 @@ export default function Auth({
               {/* ERROR */}
 
               {error && isRegister && (
-                <div className="auth-error">
-                  {error}
-                </div>
+                <div className="auth-error">{error}</div>
               )}
+              {success && isRegister && <div className="auth-success">{success}</div>}
 
 
               <form
@@ -1316,44 +1320,16 @@ function Divider({
    SOCIAL BUTTONS
 ========================================= */
 
-function SocialButtons({
-  compact = false,
-}) {
+function SocialButtons({ compact = false }) {
+  const connect = (provider) => window.location.assign(oauthUrl(provider));
   return (
-    <div
-      className={`
-        auth-socials
-        ${
-          compact
-            ? "auth-socials-compact"
-            : ""
-        }
-      `}
-    >
-
-      <button
-        type="button"
-        aria-label="Continuer avec Google"
-      >
+    <div className={`auth-socials ${compact ? "auth-socials-compact" : ""}`}>
+      <button type="button" aria-label="Continuer avec Google" onClick={() => connect("google")}>
         <GoogleIcon />
       </button>
-
-
-      <button
-        type="button"
-        aria-label="Continuer avec Apple"
-      >
-        <AppleIcon />
-      </button>
-
-
-      <button
-        type="button"
-        aria-label="Continuer avec GitHub"
-      >
+      <button type="button" aria-label="Continuer avec GitHub" onClick={() => connect("github")}>
         <GithubIcon />
       </button>
-
     </div>
   );
 }
@@ -1574,24 +1550,6 @@ function GoogleIcon() {
         fill="#1976D2"
         d="M43.6 20H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.1 5.5l6.2 5.3C37 39.2 44 34 44 24c0-1.3-.1-2.7-.4-4Z"
       />
-    </svg>
-  );
-}
-
-
-/* =========================================
-   APPLE ICON
-========================================= */
-
-function AppleIcon() {
-  return (
-    <svg
-      className="auth-social-icon"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.79 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.09ZM12.03 7.25C11.88 5.02 13.69 3.18 15.77 3c.29 2.58-2.34 4.5-3.74 4.25Z" />
     </svg>
   );
 }

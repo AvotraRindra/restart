@@ -14,51 +14,45 @@ async function sleep(ms) {
 }
 
 async function askGemini(prompt) {
-    if (!process.env.GEMINI_API_KEY) {
-        throw new Error("GEMINI_API_KEY manquante.");
+    const keys = [
+        ...(process.env.GEMINI_API_KEYS || "").split(","),
+        process.env.GEMINI_API_KEY || "",
+        process.env.GEMINI_API_KEY_1 || "",
+        process.env.GEMINI_API_KEY_2 || "",
+        process.env.GEMINI_API_KEY_3 || "",
+        process.env.GEMINI_API_KEY_4 || "",
+        process.env.GEMINI_API_KEY_5 || "",
+    ].map(k => k.trim()).filter(Boolean);
+
+    const uniqueKeys = [...new Set(keys)];
+    if (!uniqueKeys.length) {
+        throw new Error("Aucune clé Gemini configurée. Ajoutez GEMINI_API_KEY ou GEMINI_API_KEYS.");
     }
 
-    const ai = new GoogleGenAI({
-        apiKey: process.env.GEMINI_API_KEY
-    });
+    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    let lastError = null;
 
-    const maxAttempts = 4;
+    // Chaque clé est essayée. Les erreurs temporaires/rate limit passent automatiquement à la suivante.
+    for (let index = 0; index < uniqueKeys.length; index++) {
+        const key = uniqueKeys[index];
+        const ai = new GoogleGenAI({ apiKey: key });
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-            const response = await ai.models.generateContent({
-                model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
-                contents: prompt
-            });
-
-            return cleanJSON(response.text);
-
-        } catch (error) {
-            const message = error?.message || String(error);
-
-            const temporaryError =
-                message.includes("503") ||
-                message.includes("UNAVAILABLE") ||
-                message.includes("high demand");
-
-            console.error(
-                `Gemini tentative ${attempt}/${maxAttempts}:`,
-                message
-            );
-
-            if (!temporaryError || attempt === maxAttempts) {
-                throw error;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                const response = await ai.models.generateContent({ model, contents: prompt });
+                return cleanJSON(response.text);
+            } catch (error) {
+                lastError = error;
+                const message = error?.message || String(error);
+                const retryable = /429|503|UNAVAILABLE|RESOURCE_EXHAUSTED|rate|quota|high demand|temporar/i.test(message);
+                console.error(`Gemini clé ${index + 1}/${uniqueKeys.length}, tentative ${attempt}/2:`, message);
+                if (!retryable) throw error;
+                if (attempt < 2) await sleep(800 * (index + 1));
             }
-
-            const delay =
-                attempt === 1 ? 1000 :
-                attempt === 2 ? 2000 :
-                attempt === 3 ? 4000 :
-                8000;
-
-            await sleep(delay);
         }
     }
+
+    throw lastError || new Error("Toutes les clés Gemini ont échoué.");
 }
 
 async function generateBook(memory) {

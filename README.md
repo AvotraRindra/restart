@@ -1,62 +1,71 @@
-# Memories — frontend après connexion
+# RE:START / Memories
 
-Projet React + Vite correspondant à la partie située **après la connexion** du projet RE:START.
+Version intégrée après fusion des branches frontend et du backend V2.
 
-## Inclus
-- chargement animé basé sur les émotions ;
-- dashboard clair/sombre ;
-- sidebar rétractable assortie au thème rouge / blanc / bleu-noir du site ;
-- bouton de déconnexion en bas de la sidebar ;
-- interrupteur clair/sombre animé avec soleil, lune et étoiles ;
-- animations UX : transitions de page, entrée progressive des cartes, feedback des boutons, pulse des notifications, animation du micro, skeleton loading et toast de succès ;
-- création d'un souvenir en 3 étapes : émotion → texte/vocal → date/heure/lieu/visibilité ;
-- enregistrement micro via `MediaRecorder` ;
-- intégration API souvenirs RE:START ;
-- Mes souvenirs, Partagés, Messages, Notifications et Paramètres ;
-- mode démo automatique si aucun token n'est présent.
+## Fonctionnalités branchées
 
-## Installation
+- Landing page publique sans « Mes souvenirs ».
+- Inscription et connexion JWT.
+- Dashboard protégé après connexion.
+- Création de souvenir texte ou vocal.
+- Types : livre, vidéo, bande dessinée.
+- Transcription vocale via Groq/Whisper côté backend.
+- Upload de photos pour les souvenirs vidéo.
+- Upload d'un personnage de référence pour une BD.
+- Génération MNEMOS/Gemini et consultation du résultat.
+- Mes souvenirs : recherche, lecture audio, public/privé, suppression.
+- Souvenirs publics : réactions, commentaires, réponses, réactions aux commentaires.
+- Messages privés/groupes, recherche d'utilisateurs et actualisation temps réel Socket.IO.
+- Notifications et mise à jour temps réel.
+- Mode clair/sombre.
+
+## 1. Base MySQL
+
+`backend/database.sql` contient le schéma complet V2 pour une nouvelle base. Il réinitialise les tables de l'application : sauvegardez vos données avant de l'importer si votre base contient déjà des données utiles.
+
+## 2. Backend
+
 ```bash
+cd backend
+npm install
+```
+
+Copier `.env.example` vers `.env`, puis renseigner MySQL, JWT, Groq et Gemini.
+
+```bash
+npm run dev
+```
+
+Test : `GET http://localhost:5000/api/health`.
+
+## 3. Frontend
+
+```bash
+cd frontend
 npm install
 npm run dev
 ```
 
-Pour vérifier la version de production :
-```bash
-npm run build
-```
-
-## Backend
-Par défaut : `http://localhost:5000`.
-Vous pouvez créer un fichier `.env` à la racine :
+Dans `frontend/.env` :
 
 ```env
 VITE_API_URL=http://localhost:5000
-VITE_LOGIN_URL=/login
 ```
 
-`VITE_LOGIN_URL` indique où rediriger l'utilisateur après avoir cliqué sur **Déconnexion**. Adaptez-le à la route de login créée par le membre de votre équipe responsable de l'authentification.
+Si le frontend est sur un autre appareil du même réseau, remplacez `localhost` par l'IPv4 du PC backend, par exemple :
 
-Le frontend lit le JWT avec :
-
-```js
-localStorage.getItem("token")
+```env
+VITE_API_URL=http://192.168.1.15:5000
 ```
 
-Il suppose donc que la partie Login de votre équipe a déjà stocké le token sous la clé `token`.
+Et dans `backend/.env`, autorisez l'origine Vite de l'autre PC :
 
-## Routes souvenirs utilisées
-- `POST /api/memories`
-- `GET /api/memories/mine`
-- `GET /api/memories/shared`
-- `GET /api/memories/:id`
-- `PATCH /api/memories/:id/access`
-- `DELETE /api/memories/:id`
+```env
+FRONTEND_URL=http://192.168.1.20:5173
+```
 
-> Les valeurs exactes autorisées par votre backend pour `emotion` doivent correspondre à celles utilisées dans `src/pages/NewMemoryWizard.jsx`. Ajustez ce tableau si le backend utilise d'autres valeurs.
+Plusieurs origines peuvent être séparées par des virgules.
 
-## Notes d'intégration
-- Le site commence **après authentification** : aucune page login/register n'est incluse.
-- Sans token, les pages de souvenirs utilisent des données de démonstration afin de permettre le travail frontend hors connexion backend.
-- Le bouton de déconnexion supprime les données de session locales puis redirige vers `VITE_LOGIN_URL`.
-- Le thème choisi est conservé dans `localStorage` sous `memories-theme`.
+## Limite média actuelle
+
+MNEMOS génère réellement le contenu structuré du livre, les cases/dialogues/prompts de la BD et le storyboard/narration de la vidéo. Le backend actuel ne fabrique pas encore automatiquement des illustrations IA finales pour les cases ni un fichier MP4 final. L'atelier affiche clairement ces résultats et permet de relancer la génération.

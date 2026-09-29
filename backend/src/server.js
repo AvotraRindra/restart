@@ -4,11 +4,13 @@ const { Server } = require("socket.io");
 const app = require("./app");
 const db = require("./config/db");
 const configureSocket = require("./config/socket");
+const { ensureV3Schema } = require("./services/migrationService");
 
 async function start() {
   if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET manquante dans .env");
   await db.query("SELECT 1");
   console.log("MySQL connecte.");
+  await ensureV3Schema();
   const server = http.createServer(app);
   const io = new Server(server, {
     cors: {

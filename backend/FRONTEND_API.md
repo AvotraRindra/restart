@@ -329,3 +329,154 @@ Exemple :
 - `413` fichier trop gros
 - `502` service de transcription indisponible
 - `500` erreur serveur
+
+---
+
+# V3 — Authentification, profil, pièces jointes et accès public
+
+## Authentification sécurisée
+
+### `POST /api/auth/verify-email`
+Vérifie une adresse après inscription.
+
+```json
+{ "token": "TOKEN_RECU_PAR_EMAIL" }
+```
+
+### `POST /api/auth/resend-verification`
+
+```json
+{ "email": "utilisateur@example.com" }
+```
+
+### `POST /api/auth/forgot-password`
+La réponse reste volontairement générique afin de ne pas révéler si un compte existe.
+
+```json
+{ "email": "utilisateur@example.com" }
+```
+
+### `POST /api/auth/reset-password`
+
+```json
+{
+  "token": "TOKEN_RECU_PAR_EMAIL",
+  "password": "NouveauMotDePasse123"
+}
+```
+
+Le mot de passe doit contenir au moins 8 caractères, une lettre et un chiffre.
+
+### OAuth Google
+
+```text
+GET /api/auth/oauth/google
+GET /api/auth/oauth/google/callback
+```
+
+Le frontend ouvre `/api/auth/oauth/google`. Après succès, le backend redirige vers :
+
+```text
+/oauth/callback#token=JWT
+```
+
+Seules les adresses Google vérifiées sont acceptées.
+
+### OAuth GitHub
+
+```text
+GET /api/auth/oauth/github
+GET /api/auth/oauth/github/callback
+```
+
+Une adresse e-mail GitHub vérifiée est exigée.
+
+## Profil utilisateur
+
+### `PATCH /api/users/me`
+
+```json
+{
+  "nom": "Nouveau nom",
+  "bio": "Quelques mots sur moi",
+  "sexe": "autre",
+  "dateNaissance": "2005-06-15"
+}
+```
+
+### `POST /api/users/me/photo`
+`multipart/form-data` :
+
+```text
+photo = fichier image
+```
+
+## Pièces jointes d'un souvenir
+
+### `POST /api/memories/:id/attachments`
+`multipart/form-data` avec plusieurs champs `attachments` (maximum 8).
+
+Formats prévus : image, vidéo, audio, PDF, texte/Markdown, DOC/DOCX et XLS/XLSX. Taille maximale par fichier : 35 Mo.
+
+## Visualisation publique sans connexion
+
+Lorsqu'un souvenir possède `access_level = public`, ces routes ne nécessitent aucun JWT :
+
+```text
+GET /api/public/memories/:id
+GET /api/public/memories/:id/creation
+```
+
+La deuxième route retourne le souvenir, les photos, personnages BD, pièces jointes et la création MNEMOS.
+
+Lien frontend partageable :
+
+```text
+/memory/:id
+```
+
+## Présence Socket.IO
+
+Le serveur envoie :
+
+```text
+presence:list
+presence:update
+```
+
+Le client peut demander la liste des utilisateurs connectés :
+
+```js
+socket.emit("presence:get", response => {
+  console.log(response.userIds);
+});
+```
+
+Les événements de message existants restent :
+
+```text
+message:new
+typing:start
+typing:stop
+notification:new
+```
+
+## Plusieurs clés Gemini
+
+Le backend accepte soit :
+
+```env
+GEMINI_API_KEYS=cle1,cle2,cle3,cle4,cle5
+```
+
+soit :
+
+```env
+GEMINI_API_KEY_1=...
+GEMINI_API_KEY_2=...
+GEMINI_API_KEY_3=...
+GEMINI_API_KEY_4=...
+GEMINI_API_KEY_5=...
+```
+
+Ces clés restent exclusivement côté backend. Le service de génération essaie les clés suivantes en cas d'erreur temporaire ou de quota.

@@ -10,3 +10,10 @@ exports.markRead = async (req, res, next) => {
     res.json({ success: true });
   } catch (e) { next(e); }
 };
+
+exports.markAllRead = async (req, res, next) => {
+  try {
+    const count = await Notification.markAllRead(req.user.id);
+    res.json({ success: true, data: { updated: count } });
+  } catch (e) { next(e); }
+};

@@ -1,6 +1,11 @@
 node_modules/
 .env
+*.log
 src/uploads/audio/*
-src/uploads/images/*
 !src/uploads/audio/.gitkeep
+src/uploads/images/*
 !src/uploads/images/.gitkeep
+src/uploads/videos/*
+!src/uploads/videos/.gitkeep
+src/uploads/files/*
+!src/uploads/files/.gitkeep

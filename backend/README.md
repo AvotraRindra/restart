@@ -1,162 +1,116 @@
-# RE:START Backend
+# RE:START Backend V3
 
-Backend MVC Node.js + Express + MySQL pour le projet WebCup RE:START.
+Backend Node.js + Express + MySQL + Socket.IO du projet WebCup RE:START.
 
-## Inclus
+## Fonctionnalités
 
-- Inscription / connexion JWT
-- Mots de passe hachés avec bcrypt
-- Recherche d'utilisateurs
-- Création de souvenirs texte ou vocal
-- Audio conservé sur le serveur
-- Souvenir privé par défaut
-- Publication / retour en privé
-- Fil des souvenirs partagés
-- Réactions aux souvenirs
-- Commentaires + réponses
-- Réactions aux commentaires
-- Notifications temps réel avec Socket.IO
-- Discussions privées et groupes
-- Messages
+- JWT + bcrypt ;
+- vérification de l'adresse e-mail ;
+- mot de passe oublié / réinitialisation par e-mail ;
+- OAuth Google et GitHub avec e-mail vérifié ;
+- révocation des anciennes sessions après changement de mot de passe ;
+- profil utilisateur : nom, bio, photo, sexe et date de naissance ;
+- souvenirs texte ou vocal, transcription Groq/Whisper ;
+- Livre / BD / Vidéo via MNEMOS/Gemini ;
+- rotation automatique sur jusqu'à 5 clés Gemini ;
+- souvenirs privés/publics et lecture publique sans authentification ;
+- pièces jointes ;
+- réactions, commentaires et notifications ;
+- discussions privées/groupes, présence en ligne, typing et messages Socket.IO ;
+- migration V3 automatique non destructive pour une base V2 existante.
 
 ## Installation
 
-1. Importer `database.sql` dans MySQL.
-2. Copier `.env.example` vers `.env`.
-3. Configurer MySQL dans `.env`.
-4. Installer puis lancer :
+Pour une base neuve, importer `database.sql`. Pour une base existante, faites d'abord une sauvegarde : `AUTO_MIGRATE=true` complète automatiquement le schéma au démarrage. `migration_v3.sql` est également fourni pour une migration manuelle.
 
 ```bash
+cp .env.example .env
 npm install
-npm run dev
+node src/server.js
 ```
 
-API locale : `http://localhost:5000`
+API : `http://localhost:5000` par défaut.
 
-## Authentification
+## Variables importantes
 
-Après `/api/auth/login`, envoyer le token :
+Configurez dans `.env` :
+
+- `DB_*`, `JWT_SECRET`, `FRONTEND_URL` ;
+- `GROQ_API_KEY` ;
+- `GEMINI_API_KEY` ou `GEMINI_API_KEY_1..5` ;
+- `SMTP_*` pour les e-mails ;
+- identifiants OAuth Google/GitHub si ces connexions sont activées.
+
+Ne poussez jamais `.env` dans Git.
+
+## Auth V3
+
+```text
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
+POST /api/auth/verify-email
+POST /api/auth/resend-verification
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
+GET  /api/auth/oauth/google
+GET  /api/auth/oauth/github
+```
+
+Les routes protégées attendent :
 
 ```http
-Authorization: Bearer VOTRE_TOKEN
+Authorization: Bearer VOTRE_JWT
 ```
 
-## Routes principales
+## Profil
 
-| Méthode | Route | Description |
-|---|---|---|
-| POST | /api/auth/register | Inscription |
-| POST | /api/auth/login | Connexion |
-| GET | /api/auth/me | Profil connecté |
-| GET | /api/users/search?q=... | Chercher un utilisateur |
-| POST | /api/memories | Créer un souvenir |
-| GET | /api/memories/mine | Mes souvenirs |
-| GET | /api/memories/shared | Souvenirs publics |
-| GET | /api/memories/:id | Détail |
-| PATCH | /api/memories/:id/access | privé/public |
-| DELETE | /api/memories/:id | Supprimer |
-| POST | /api/memories/:id/reactions | Réagir |
-| GET | /api/memories/:id/comments | Commentaires |
-| POST | /api/memories/:id/comments | Commenter/répondre |
-| POST | /api/comments/:commentId/reactions | Réagir commentaire |
-| GET | /api/notifications | Notifications |
-| PATCH | /api/notifications/:id/read | Marquer lue |
-| GET | /api/conversations | Discussions |
-| POST | /api/conversations | Créer discussion/groupe |
-| GET | /api/conversations/:id/messages | Messages |
-| POST | /api/conversations/:id/messages | Envoyer message |
-| POST | /api/conversations/:id/members | Ajouter membre |
-
-## Créer un souvenir texte
-
-`POST /api/memories`, JSON :
-
-```json
-{
-  "emotion": "joyeux",
-  "title": "Notre victoire",
-  "text": "Aujourd'hui nous avons gagné la WebCup...",
-  "date": "2042-11-08",
-  "time": "21:30:00",
-  "location": "Antananarivo",
-  "access": "private"
-}
+```text
+GET   /api/users/search?q=...
+PATCH /api/users/me
+POST  /api/users/me/photo
 ```
 
-## Créer un souvenir vocal
+## Souvenirs
 
-Envoyer `multipart/form-data` sur `POST /api/memories` :
-
-- `emotion`: joyeux
-- `date`: 2042-11-08
-- `location`: Antananarivo
-- `audio`: fichier audio
-- `text`: transcription si déjà disponible côté service de transcription
-
-Le fichier vocal est conservé dans `src/uploads/audio/`.
-
-### Important sur la transcription
-
-Ce backend prépare le stockage du vocal et de sa transcription, mais ne prétend pas transcrire localement l'audio. Pour la WebCup, branchez votre service Speech-to-Text dans `memoryController.create`, puis stockez le texte retourné dans `text_content`. Le fichier audio original reste conservé.
-
-## Partager un souvenir
-
-```json
-PATCH /api/memories/12/access
-{ "access": "public" }
+```text
+POST   /api/memories
+GET    /api/memories/mine
+GET    /api/memories/shared
+GET    /api/memories/:id
+PATCH  /api/memories/:id/access
+DELETE /api/memories/:id
+POST   /api/memories/:id/photos
+POST   /api/memories/:id/characters
+POST   /api/memories/:id/attachments
+POST   /api/memories/:id/generate
+GET    /api/memories/:id/creation
 ```
 
-Pour le remettre privé :
+Accès public sans JWT si le souvenir est publié :
 
-```json
-{ "access": "private" }
+```text
+GET /api/public/memories/:id
+GET /api/public/memories/:id/creation
 ```
 
-## Répondre à un commentaire
+## Social / temps réel
 
-```json
-POST /api/memories/12/comments
-{
-  "content": "Je m'en souviens aussi !",
-  "parentId": 8
-}
-```
-
-## Créer une discussion privée
-
-```json
+```text
+POST /api/memories/:id/reactions
+GET  /api/memories/:id/comments
+POST /api/memories/:id/comments
+POST /api/comments/:commentId/reactions
+GET  /api/notifications
+PATCH /api/notifications/:id/read
+PATCH /api/notifications/read-all
+GET  /api/conversations
 POST /api/conversations
-{
-  "type": "private",
-  "memberIds": [5]
-}
+GET  /api/conversations/:id/messages
+POST /api/conversations/:id/messages
+POST /api/conversations/:id/members
 ```
 
-## Créer un groupe
+Socket.IO fournit notamment `message:new`, `notification:new`, `presence:list`, `presence:update`, `typing:start` et `typing:stop`.
 
-```json
-POST /api/conversations
-{
-  "type": "group",
-  "name": "Équipe WebCup",
-  "memberIds": [2, 5, 9]
-}
-```
-
-## À faire ensuite pour une version compétition
-
-- WebSocket / Socket.IO pour messages et notifications temps réel
-- Service Speech-to-Text pour transcription vocale
-- Upload images/vidéos des souvenirs
-- MNEMOS : analyse intelligente des souvenirs
-- limitation métier à 100 souvenirs
-- validation plus stricte avec Zod/Joi
-- stockage cloud des médias en production
-
-
-## Temps réel + transcription automatique
-
-Cette version ajoute Socket.IO et une transcription automatique via OpenAI Speech-to-Text.
-Renseignez `OPENAI_API_KEY` dans `.env`.
-
-Le contrat complet à remettre à l'équipe React est dans `FRONTEND_API.md`.
+Voir `FRONTEND_API.md` et `SECURITY_AUTH_SETUP.md` pour les détails d'intégration.

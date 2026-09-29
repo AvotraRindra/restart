@@ -1,16 +1,49 @@
-# React + Vite
+# RE:START Frontend V3
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React + Vite intégré : Landing Page, authentification et espace connecté.
 
-Currently, two official plugins are available:
+## Installation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+Pour rendre Vite accessible aux téléphones du même réseau :
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm run dev -- --host 0.0.0.0
+```
 
-## Expanding the ESLint configuration
+Copiez `.env.example` vers `.env` :
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+Sur un autre appareil du réseau, utilisez l'IPv4 du PC backend, par exemple `http://192.168.137.138:5000`.
+
+## Fonctionnalités
+
+- Landing Page sans accès « Mes souvenirs » avant authentification ;
+- Login/Register + vérification e-mail ;
+- mot de passe oublié et reset par e-mail ;
+- Google et GitHub OAuth ;
+- redirection automatique vers le Dashboard si une session existe ;
+- Dashboard et souvenirs récents directement ouvrables ;
+- Mes souvenirs, partage public/privé et lien public `/memory/:id` ;
+- visualisation Livre/BD/Vidéo ;
+- lecteur Livre 3D en double page ;
+- création texte/vocale et pièces jointes ;
+- Atelier MNEMOS ;
+- Partagés, réactions et commentaires ;
+- Notifications cliquables ;
+- Messages temps réel et présence « En ligne » ;
+- Profil avec photo, nom, bio et préférences ;
+- navigation responsive mobile avec accès aux fonctions principales.
+
+## Session
+
+Le JWT est conservé sous `localStorage.token`. Les routes `/login` et `/register` renvoient vers `/dashboard` tant que cette session est présente et valide. Le bouton Déconnexion supprime la session et ferme Socket.IO.
+
+Les secrets Gemini, Groq, SMTP, Google et GitHub ne doivent jamais être placés dans le frontend.

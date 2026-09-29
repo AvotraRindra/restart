@@ -1,61 +1,22 @@
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_URL, apiFetch } from "./api.js";
 
-
-/* =========================================
-   REGISTER
-========================================= */
-
-export async function registerUser(userData) {
-  const response = await fetch(
-    `${API_URL}/api/auth/register`,
-    {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify(userData),
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || "Erreur lors de l'inscription"
-    );
-  }
-
-  return data;
+export function registerUser(userData) {
+  return apiFetch("/api/auth/register", { method: "POST", body: JSON.stringify(userData) });
 }
-
-
-/* =========================================
-   LOGIN
-========================================= */
-
-export async function loginUser(credentials) {
-  const response = await fetch(
-    `${API_URL}/api/auth/login`,
-    {
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json",
-      },
-
-      body: JSON.stringify(credentials),
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || "Email ou mot de passe incorrect"
-    );
-  }
-
-  return data;
+export function loginUser(credentials) {
+  return apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify(credentials) });
 }
+export function getCurrentUser() { return apiFetch("/api/auth/me"); }
+export function forgotPassword(email) {
+  return apiFetch("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+}
+export function resetPassword(token, password) {
+  return apiFetch("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) });
+}
+export function verifyEmail(token) {
+  return apiFetch("/api/auth/verify-email", { method: "POST", body: JSON.stringify({ token }) });
+}
+export function resendVerification(email) {
+  return apiFetch("/api/auth/resend-verification", { method: "POST", body: JSON.stringify({ email }) });
+}
+export function oauthUrl(provider) { return `${API_URL}/api/auth/oauth/${provider}`; }
