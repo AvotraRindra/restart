@@ -1,0 +1,24 @@
+.footer { position: relative; padding: 80px 8vw 150px; overflow: hidden; }
+.footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1.4fr; gap: 40px; }
+.brand { font: 800 40px var(--serif); display: flex; align-items: center; gap: 12px; }
+.brand-logo { font-size: 26px; background: #ffe3de; border-radius: 16px; padding: 12px; animation: bob 4s ease-in-out infinite; }
+.tag { color: var(--muted); line-height: 1.6; margin: 18px 0; max-width: 260px; }
+.socials { display: flex; gap: 14px; }
+.socials a { width: 52px; height: 52px; display: grid; place-items: center; background: #fff; border-radius: 14px; box-shadow: 0 4px 14px #0001; font-weight: 700; transition: .3s; }
+.socials a:hover { background: var(--red); color: #fff; transform: translateY(-6px) rotate(8deg); }
+.footer h4 { font: 700 22px var(--serif); padding-bottom: 12px; margin-bottom: 20px; position: relative; }
+.footer h4::after { content: ""; position: absolute; left: 0; bottom: 0; width: 32px; height: 2px; background: var(--red); transition: width .4s; }
+.footer-grid > div:hover h4::after { width: 60px; }
+.footer li { list-style: none; margin-bottom: 14px; }
+.footer li a { color: var(--muted); display: inline-block; transition: .25s; }
+.footer li a:hover { color: var(--red); transform: translateX(6px); }
+.news { display: flex; background: #fff; border: 1px solid #e1060022; border-radius: 999px; padding: 6px; }
+.news input { flex: 1; border: 0; outline: 0; background: none; padding: 0 16px; font: inherit; min-width: 0; }
+.news button { width: 46px; height: 46px; border-radius: 50%; background: var(--red); color: #fff; transition: transform .3s; }
+.news button:hover { transform: scale(1.12) rotate(-10deg); }
+.footer-bottom { display: flex; justify-content: space-between; margin-top: 60px; padding-top: 28px; border-top: 1px solid #0001; color: var(--muted); }
+.heart { color: var(--red); display: inline-block; animation: beat 1.2s infinite; }
+@keyframes beat { 30% { transform: scale(1.4); } 60% { transform: scale(1); } }
+.wave { position: absolute; left: 0; bottom: 0; width: 200%; height: 110px; fill: #ffd5cf88; animation: slide 14s linear infinite; z-index: -1; }
+@keyframes slide { to { transform: translateX(-50%); } }
+@media (max-width: 1000px) { .footer-grid { grid-template-columns: 1fr 1fr; } .footer-bottom { flex-direction: column; gap: 10px; } }
