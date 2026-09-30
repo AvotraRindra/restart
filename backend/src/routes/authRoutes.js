@@ -11,8 +11,6 @@ router.post("/forgot-password", c.forgotPassword);
 router.post("/reset-password", c.resetPassword);
 router.get("/oauth/google", c.googleStart);
 router.get("/oauth/google/callback", c.googleCallback);
-router.get("/oauth/github", c.githubStart);
-router.get("/oauth/github/callback", c.githubCallback);
 router.get("/me", auth, c.me);
 
 module.exports = router;

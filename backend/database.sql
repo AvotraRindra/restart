@@ -2,10 +2,11 @@
 -- Pour une NOUVELLE base locale. Ce script réinitialise les tables de l'application.
 -- Si vous avez déjà des données importantes, faites une sauvegarde avant de l'importer.
 
-CREATE DATABASE IF NOT EXISTS restart CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE restart;
+CREATE DATABASE IF NOT EXISTS leboot_restart CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE leboot_restart;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS message_attachments;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS conversation_members;
 DROP TABLE IF EXISTS conversations;
@@ -203,6 +204,18 @@ CREATE TABLE messages (
   CONSTRAINT fk_message_conversation FOREIGN KEY(conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
   CONSTRAINT fk_message_sender FOREIGN KEY(sender_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_messages_conversation(conversation_id,created_at)
+) ENGINE=InnoDB;
+
+CREATE TABLE message_attachments (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  message_id BIGINT UNSIGNED NOT NULL,
+  stored_name VARCHAR(255) NOT NULL,
+  original_name VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(120) NOT NULL,
+  size_bytes BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_message_attachment_message FOREIGN KEY(message_id) REFERENCES messages(id) ON DELETE CASCADE,
+  INDEX idx_message_attachments(message_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE notifications (

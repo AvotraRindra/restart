@@ -213,39 +213,3 @@ exports.googleCallback = async (req, res) => {
     res.redirect(`${frontendUrl()}/login?oauth_error=${encodeURIComponent(error.message)}`);
   }
 };
-
-exports.githubStart = (req, res) => {
-  if (!process.env.GITHUB_CLIENT_ID) return res.status(503).json({ success: false, message: "OAuth GitHub n'est pas configuré." });
-  const redirectUri = process.env.GITHUB_REDIRECT_URI || `${backendUrl()}/api/auth/oauth/github/callback`;
-  const params = new URLSearchParams({ client_id: process.env.GITHUB_CLIENT_ID, redirect_uri: redirectUri, scope: "read:user user:email", state: oauthState("github") });
-  res.redirect(`https://github.com/login/oauth/authorize?${params}`);
-};
-
-exports.githubCallback = async (req, res) => {
-  try {
-    readOAuthState(req.query.state, "github");
-    const redirectUri = process.env.GITHUB_REDIRECT_URI || `${backendUrl()}/api/auth/oauth/github/callback`;
-    const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
-      method: "POST",
-      headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ client_id: process.env.GITHUB_CLIENT_ID, client_secret: process.env.GITHUB_CLIENT_SECRET, code: req.query.code, redirect_uri: redirectUri }),
-    });
-    if (!tokenResponse.ok) throw new Error("Échange OAuth GitHub impossible.");
-    const tokenData = await tokenResponse.json();
-    if (!tokenData.access_token) throw new Error(tokenData.error_description || "Jeton GitHub manquant.");
-    const headers = { Authorization: `Bearer ${tokenData.access_token}`, Accept: "application/vnd.github+json", "User-Agent": "RESTART-WebCup" };
-    const profileResponse = await fetch("https://api.github.com/user", { headers });
-    if (!profileResponse.ok) throw new Error("Profil GitHub inaccessible.");
-    const profile = await profileResponse.json();
-    const emailsResponse = await fetch("https://api.github.com/user/emails", { headers });
-    if (!emailsResponse.ok) throw new Error("Les adresses e-mail GitHub sont inaccessibles.");
-    const emails = await emailsResponse.json();
-    const email = emails.find((x) => x.primary && x.verified)?.email || emails.find((x) => x.verified)?.email;
-    if (!email) throw new Error("Votre compte GitHub doit disposer d'une adresse e-mail vérifiée.");
-    const result = await finishOAuth({ provider: "github", providerId: profile.id, email, name: profile.name || profile.login, photo: profile.avatar_url });
-    res.redirect(`${frontendUrl()}/oauth/callback#token=${encodeURIComponent(result.token)}`);
-  } catch (error) {
-    console.error("OAuth GitHub:", error);
-    res.redirect(`${frontendUrl()}/login?oauth_error=${encodeURIComponent(error.message)}`);
-  }
-};

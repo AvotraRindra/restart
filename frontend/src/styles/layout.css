@@ -136,3 +136,14 @@
   .notif-dot{right:5px;top:5px}.topbar{height:64px;padding:0 10px}.search-box{width:min(54vw,320px);height:39px}.topbar-actions{gap:4px}.icon-btn{width:38px;height:38px}.profile-chip{margin-left:0;padding:0}.profile-chip>span{width:38px;height:38px}.profile-chip>div{display:none}.app-content{padding:14px 12px 28px}
 }
 @media(max-width:420px){.search-box{width:46vw;padding:0 10px}.theme-toggle{transform:scale(.9)}.topbar{gap:5px}.app-content{padding:12px 10px 24px}}
+
+/* V3.1 — icônes de navigation légèrement agrandies sans modifier la mise en page */
+.side-nav nav button svg{width:26px;height:26px}
+.side-create svg{width:27px;height:27px}
+.side-bottom svg{width:25px;height:25px}
+.search-box svg{width:22px;height:22px}
+@media(max-width:720px){
+  .side-nav nav button svg{width:27px;height:27px}
+  .side-create svg{width:28px;height:28px}
+  .side-bottom svg{width:26px;height:26px}
+}

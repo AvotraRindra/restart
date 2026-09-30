@@ -1,6 +1,6 @@
 -- RE:START V3 - migration non destructive pour une base existante XAMPP/MariaDB.
 -- Faites quand même une sauvegarde avant toute migration.
-USE restart;
+USE leboot_restart;
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(500) NULL AFTER photo;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE AFTER date_naissance;
@@ -30,4 +30,18 @@ CREATE TABLE IF NOT EXISTS memory_attachments (
   size_bytes BIGINT UNSIGNED NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_memory_attachments(memory_id)
+) ENGINE=InnoDB;
+
+
+-- V3.2 : pièces jointes privées de la messagerie
+CREATE TABLE IF NOT EXISTS message_attachments (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  message_id BIGINT UNSIGNED NOT NULL,
+  stored_name VARCHAR(255) NOT NULL,
+  original_name VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(120) NOT NULL,
+  size_bytes BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_message_attachments(message_id),
+  CONSTRAINT fk_message_attachment_message FOREIGN KEY(message_id) REFERENCES messages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

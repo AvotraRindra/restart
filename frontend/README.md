@@ -28,7 +28,7 @@ Sur un autre appareil du réseau, utilisez l'IPv4 du PC backend, par exemple `ht
 - Landing Page sans accès « Mes souvenirs » avant authentification ;
 - Login/Register + vérification e-mail ;
 - mot de passe oublié et reset par e-mail ;
-- Google et GitHub OAuth ;
+- Google OAuth ;
 - redirection automatique vers le Dashboard si une session existe ;
 - Dashboard et souvenirs récents directement ouvrables ;
 - Mes souvenirs, partage public/privé et lien public `/memory/:id` ;
@@ -46,4 +46,4 @@ Sur un autre appareil du réseau, utilisez l'IPv4 du PC backend, par exemple `ht
 
 Le JWT est conservé sous `localStorage.token`. Les routes `/login` et `/register` renvoient vers `/dashboard` tant que cette session est présente et valide. Le bouton Déconnexion supprime la session et ferme Socket.IO.
 
-Les secrets Gemini, Groq, SMTP, Google et GitHub ne doivent jamais être placés dans le frontend.
+Les secrets Gemini, Groq, SMTP, Google ne doivent jamais être placés dans le frontend.

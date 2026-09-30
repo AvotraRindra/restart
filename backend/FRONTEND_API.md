@@ -382,15 +382,6 @@ Le frontend ouvre `/api/auth/oauth/google`. Après succès, le backend redirige 
 
 Seules les adresses Google vérifiées sont acceptées.
 
-### OAuth GitHub
-
-```text
-GET /api/auth/oauth/github
-GET /api/auth/oauth/github/callback
-```
-
-Une adresse e-mail GitHub vérifiée est exigée.
-
 ## Profil utilisateur
 
 ### `PATCH /api/users/me`

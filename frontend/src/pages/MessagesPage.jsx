@@ -1,13 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createConversation, getConversations, getMessages, searchUsers, sendMessage } from "../services/conversationApi.js";
+import { createConversation, downloadMessageAttachment, getConversations, getMessages, searchUsers, sendMessage } from "../services/conversationApi.js";
 import { getSocket } from "../services/socketApi.js";
 import { imageUrl } from "../services/memoryApi.js";
+import { File, Paperclip, Send, X } from "../components/Icons.jsx";
+
+function formatBytes(value = 0) {
+  const n = Number(value || 0);
+  if (n < 1024) return `${n} o`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} Ko`;
+  return `${(n / 1024 / 1024).toFixed(1)} Mo`;
+}
 
 export default function MessagesPage({ user, initialConversationId = null }) {
   const [conversations, setConversations] = useState([]);
   const [selectedId, setSelectedId] = useState(initialConversationId || null);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
+  const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState("");
@@ -17,9 +26,11 @@ export default function MessagesPage({ user, initialConversationId = null }) {
   const [groupName, setGroupName] = useState("");
   const [typingUser, setTypingUser] = useState(false);
   const [onlineIds, setOnlineIds] = useState(() => new Set());
+  const [sending, setSending] = useState(false);
   const socketRef = useRef(null);
   const typingTimer = useRef(null);
   const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const selected = useMemo(() => conversations.find((c) => Number(c.id) === Number(selectedId)), [conversations, selectedId]);
   const onlineCount = [...onlineIds].filter((id) => Number(id) !== Number(user?.id)).length;
@@ -46,13 +57,15 @@ export default function MessagesPage({ user, initialConversationId = null }) {
 
   async function loadMessages(id = selectedId) {
     if (!id) { setMessages([]); return; }
-    try { const r = await getMessages(id); setMessages(Array.isArray(r?.data) ? r.data : []); }
-    catch (e) { setError(e.message); }
+    try {
+      const r = await getMessages(id);
+      setMessages(Array.isArray(r?.data) ? r.data : []);
+    } catch (e) { setError(e.message); }
   }
 
   useEffect(() => { loadConversations(); const timer = window.setInterval(loadConversations, 12000); return () => window.clearInterval(timer); }, []);
   useEffect(() => { if (initialConversationId) setSelectedId(initialConversationId); }, [initialConversationId]);
-  useEffect(() => { if (!selectedId) return; loadMessages(selectedId); }, [selectedId]);
+  useEffect(() => { if (!selectedId) return; loadMessages(selectedId); setFiles([]); }, [selectedId]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [messages, selectedId]);
 
   useEffect(() => {
@@ -76,7 +89,8 @@ export default function MessagesPage({ user, initialConversationId = null }) {
     return () => {
       mounted = false;
       if (socket?.__restartMessageHandlers) {
-        const h=socket.__restartMessageHandlers; socket.off("presence:list",h.onPresenceList); socket.off("presence:update",h.onPresenceUpdate); socket.off("message:new",h.onMessage); socket.off("typing:start",h.onTyping); socket.off("typing:stop",h.onTypingStop);
+        const h = socket.__restartMessageHandlers;
+        socket.off("presence:list", h.onPresenceList); socket.off("presence:update", h.onPresenceUpdate); socket.off("message:new", h.onMessage); socket.off("typing:start", h.onTyping); socket.off("typing:stop", h.onTypingStop);
       }
       if (socket && selectedId) socket.emit("conversation:leave", { conversationId: selectedId });
     };
@@ -89,14 +103,27 @@ export default function MessagesPage({ user, initialConversationId = null }) {
     return () => window.clearTimeout(t);
   }, [search]);
 
+  function pickFiles(event) {
+    const incoming = [...(event.target.files || [])];
+    const next = [...files, ...incoming].slice(0, 5);
+    setFiles(next);
+    event.target.value = "";
+  }
+
   async function submitMessage(e) {
-    e.preventDefault(); if (!draft.trim() || !selectedId) return;
-    const content = draft.trim(); setDraft("");
+    e.preventDefault();
+    if ((!draft.trim() && files.length === 0) || !selectedId || sending) return;
+    const content = draft.trim();
+    const outgoingFiles = files;
+    setDraft(""); setFiles([]); setSending(true);
     try {
-      const r = await sendMessage(selectedId, content);
+      const r = await sendMessage(selectedId, content, outgoingFiles);
       if (r?.data) setMessages((xs) => xs.some((x) => Number(x.id) === Number(r.data.id)) ? xs : [...xs, r.data]);
-      socketRef.current?.emit("typing:stop", { conversationId: selectedId }); loadConversations();
-    } catch (e2) { setDraft(content); setError(e2.message); }
+      socketRef.current?.emit("typing:stop", { conversationId: selectedId });
+      loadConversations();
+    } catch (e2) {
+      setDraft(content); setFiles(outgoingFiles); setError(e2.message);
+    } finally { setSending(false); }
   }
 
   function toggleUser(item) {
@@ -118,15 +145,28 @@ export default function MessagesPage({ user, initialConversationId = null }) {
   const selectedOnline = conversationIsOnline(selected);
 
   return <section className="page-shell messages-page">
-    <div className="page-head"><div><span>DISCUSSIONS · {onlineCount} EN LIGNE</span><h1>Messages</h1><p>Échangez en temps réel et voyez qui est actuellement actif.</p></div><button className="primary-btn" onClick={() => setShowCreate(true)}>+ Nouvelle discussion</button></div>
+    <div className="page-head"><div><span>DISCUSSIONS · {onlineCount} EN LIGNE</span><h1>Messages</h1><p>Échangez en temps réel, partagez des fichiers et voyez qui est actuellement actif.</p></div><button className="primary-btn" onClick={() => setShowCreate(true)}>+ Nouvelle discussion</button></div>
     {error && <div className="inline-alert">{error}<button onClick={() => setError("")}>×</button></div>}
     <div className="chat-shell">
       <aside className="chat-list"><div className="chat-search">{conversations.length} discussion(s) · <b>{onlineCount} actif(s)</b></div>{conversations.length === 0 ? <p className="muted">Aucune discussion.</p> : conversations.map((c) => {
-        const online=conversationIsOnline(c); const photo=c.display_photo ? imageUrl(c.display_photo) : "";
+        const online = conversationIsOnline(c); const photo = c.display_photo ? imageUrl(c.display_photo) : "";
         return <button className={Number(c.id) === Number(selectedId) ? "active" : ""} key={c.id} onClick={() => setSelectedId(c.id)}><span className="chat-avatar">{photo ? <img src={photo} alt=""/> : (c.display_name || c.name || "D")[0].toUpperCase()}{online && <i className="online-dot"/>}</span><div><strong>{c.display_name || c.name || `Discussion #${c.id}`}</strong><small>{online ? "En ligne" : c.last_message || (c.type === "group" ? "Groupe" : "Nouvelle conversation")}</small></div></button>;
       })}</aside>
-      <div className="chat-panel">{selected ? <><header><span className="chat-avatar">{selected.display_photo ? <img src={imageUrl(selected.display_photo)} alt=""/> : displayName[0]?.toUpperCase()}{selectedOnline && <i className="online-dot"/>}</span><div><strong>{displayName}</strong><small>{typingUser ? "écrit…" : selectedOnline ? "En ligne" : selected.type === "group" ? `${selected.members_count || ""} membres` : "Hors ligne"}</small></div></header><div className="chat-messages">{messages.length === 0 ? <p className="chat-empty">Aucun message. Envoyez le premier 👋</p> : messages.map((m) => { const mine=Number(m.sender_id)===Number(user?.id); return <div key={m.id} className={`message-wrap ${mine?"mine":"other"}`}><small>{mine?"Vous":m.sender_name}</small><p className={mine?"sent":"received"}>{m.content}</p></div>; })}<div ref={bottomRef}/></div><form className="chat-compose" onSubmit={submitMessage}><span/><input value={draft} onChange={(e)=>{setDraft(e.target.value);socketRef.current?.emit("typing:start",{conversationId:selectedId});window.clearTimeout(typingTimer.current);typingTimer.current=window.setTimeout(()=>socketRef.current?.emit("typing:stop",{conversationId:selectedId}),900)}} placeholder="Écrire un message…"/><button className="send" type="submit" disabled={!draft.trim()}>➤</button></form></> : <div className="empty-state"><strong>Sélectionnez une discussion.</strong></div>}</div>
+      <div className="chat-panel">{selected ? <>
+        <header><span className="chat-avatar">{selected.display_photo ? <img src={imageUrl(selected.display_photo)} alt=""/> : displayName[0]?.toUpperCase()}{selectedOnline && <i className="online-dot"/>}</span><div><strong>{displayName}</strong><small>{typingUser ? "écrit…" : selectedOnline ? "En ligne" : selected.type === "group" ? `${selected.members_count || ""} membres` : "Hors ligne"}</small></div></header>
+        <div className="chat-messages">{messages.length === 0 ? <p className="chat-empty">Aucun message. Envoyez le premier 👋</p> : messages.map((m) => {
+          const mine = Number(m.sender_id) === Number(user?.id);
+          return <div key={m.id} className={`message-wrap ${mine ? "mine" : "other"}`}><small>{mine ? "Vous" : m.sender_name}</small>{m.content ? <p className={mine ? "sent" : "received"}>{m.content}</p> : null}{Array.isArray(m.attachments) && m.attachments.length > 0 && <div className="message-attachments">{m.attachments.map((a) => <button type="button" key={a.id} onClick={() => downloadMessageAttachment(selectedId, a).catch((e) => setError(e.message))}><File size={18}/><span><strong>{a.original_name}</strong><small>{formatBytes(a.size_bytes)}</small></span><b>↓</b></button>)}</div>}</div>;
+        })}<div ref={bottomRef}/></div>
+        {files.length > 0 && <div className="chat-file-queue">{files.map((file, index) => <span key={`${file.name}-${index}`}><Paperclip size={15}/><b>{file.name}</b><small>{formatBytes(file.size)}</small><button type="button" onClick={() => setFiles((xs) => xs.filter((_, i) => i !== index))}><X size={14}/></button></span>)}</div>}
+        <form className="chat-compose" onSubmit={submitMessage}>
+          <input ref={fileInputRef} type="file" multiple hidden onChange={pickFiles} accept="image/*,video/mp4,video/webm,audio/*,.pdf,.txt,.md,.doc,.docx,.xls,.xlsx"/>
+          <button className="attach" type="button" onClick={() => fileInputRef.current?.click()} aria-label="Ajouter une pièce jointe" title="Ajouter une pièce jointe"><Paperclip size={20}/></button>
+          <input value={draft} onChange={(e) => { setDraft(e.target.value); socketRef.current?.emit("typing:start", { conversationId: selectedId }); window.clearTimeout(typingTimer.current); typingTimer.current = window.setTimeout(() => socketRef.current?.emit("typing:stop", { conversationId: selectedId }), 900); }} placeholder="Écrire un message…"/>
+          <button className="send" type="submit" disabled={(!draft.trim() && files.length === 0) || sending} aria-label="Envoyer"><Send size={18}/></button>
+        </form>
+      </> : <div className="empty-state"><strong>Sélectionnez une discussion.</strong></div>}</div>
     </div>
-    {showCreate && <div className="modal-backdrop" onMouseDown={(e)=>e.currentTarget===e.target&&setShowCreate(false)}><form className="conversation-modal panel" onSubmit={createNewConversation}><div className="modal-head"><div><small>NOUVELLE DISCUSSION</small><h2>Choisir les participants</h2></div><button type="button" onClick={()=>setShowCreate(false)}>×</button></div><div className="conversation-type-row"><button type="button" className={conversationType==="private"?"active":""} onClick={()=>{setConversationType("private");setSelectedUsers([])}}>Privée</button><button type="button" className={conversationType==="group"?"active":""} onClick={()=>{setConversationType("group");setSelectedUsers([])}}>Groupe</button></div>{conversationType==="group"&&<input className="modal-input" value={groupName} onChange={(e)=>setGroupName(e.target.value)} placeholder="Nom du groupe"/>}<input className="modal-input" value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Rechercher par nom ou email…" autoFocus/><div className="user-search-results">{results.map((u)=>{const active=onlineIds.has(Number(u.id));return <button type="button" key={u.id} className={selectedUsers.some((x)=>x.id===u.id)?"selected":""} onClick={()=>toggleUser(u)}><span className="chat-avatar">{u.photo?<img src={imageUrl(u.photo)} alt=""/>:u.nom?.[0]||"U"}{active&&<i className="online-dot"/>}</span><div><strong>{u.nom}</strong><small>{active?"En ligne":u.email}</small></div><b>{selectedUsers.some((x)=>x.id===u.id)?"✓":"+"}</b></button>})}</div><div className="modal-actions"><span>{selectedUsers.length} sélectionné(s)</span><button className="primary-btn" type="submit">Créer la discussion</button></div></form></div>}
+    {showCreate && <div className="modal-backdrop" onMouseDown={(e) => e.currentTarget === e.target && setShowCreate(false)}><form className="conversation-modal panel" onSubmit={createNewConversation}><div className="modal-head"><div><small>NOUVELLE DISCUSSION</small><h2>Choisir les participants</h2></div><button type="button" onClick={() => setShowCreate(false)}>×</button></div><div className="conversation-type-row"><button type="button" className={conversationType === "private" ? "active" : ""} onClick={() => { setConversationType("private"); setSelectedUsers([]); }}>Privée</button><button type="button" className={conversationType === "group" ? "active" : ""} onClick={() => { setConversationType("group"); setSelectedUsers([]); }}>Groupe</button></div>{conversationType === "group" && <input className="modal-input" value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Nom du groupe"/>}<input className="modal-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom ou email…" autoFocus/><div className="user-search-results">{results.map((u) => { const active = onlineIds.has(Number(u.id)); return <button type="button" key={u.id} className={selectedUsers.some((x) => x.id === u.id) ? "selected" : ""} onClick={() => toggleUser(u)}><span className="chat-avatar">{u.photo ? <img src={imageUrl(u.photo)} alt=""/> : u.nom?.[0] || "U"}{active && <i className="online-dot"/>}</span><div><strong>{u.nom}</strong><small>{active ? "En ligne" : u.email}</small></div><b>{selectedUsers.some((x) => x.id === u.id) ? "✓" : "+"}</b></button>; })}</div><div className="modal-actions"><span>{selectedUsers.length} sélectionné(s)</span><button className="primary-btn" type="submit">Créer la discussion</button></div></form></div>}
   </section>;
 }

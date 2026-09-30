@@ -11,6 +11,7 @@ const socialRoutes = require("./routes/socialRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
 const publicRoutes = require("./routes/publicRoutes");
+const assistantRoutes = require("./routes/assistantRoutes");
 const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
@@ -39,6 +40,14 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth", authLimiter);
 
+const assistantLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 35,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { success: false, message: "Trop de demandes à MNEMOS. Réessayez dans quelques minutes." },
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "1h", immutable: false }));
 app.get("/api/health", (req, res) => res.json({ success: true, message: "RE:START API fonctionne" }));
 app.use("/api/public", publicRoutes);
@@ -49,6 +58,7 @@ app.use("/api", creationRoutes);
 app.use("/api", socialRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use("/api/assistant", assistantLimiter, assistantRoutes);
 app.use((req, res) => res.status(404).json({ success: false, message: "Route introuvable." }));
 app.use(errorHandler);
 module.exports = app;

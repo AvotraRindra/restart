@@ -1327,9 +1327,6 @@ function SocialButtons({ compact = false }) {
       <button type="button" aria-label="Continuer avec Google" onClick={() => connect("google")}>
         <GoogleIcon />
       </button>
-      <button type="button" aria-label="Continuer avec GitHub" onClick={() => connect("github")}>
-        <GithubIcon />
-      </button>
     </div>
   );
 }
@@ -1550,24 +1547,6 @@ function GoogleIcon() {
         fill="#1976D2"
         d="M43.6 20H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.1 5.5l6.2 5.3C37 39.2 44 34 44 24c0-1.3-.1-2.7-.4-4Z"
       />
-    </svg>
-  );
-}
-
-
-/* =========================================
-   GITHUB ICON
-========================================= */
-
-function GithubIcon() {
-  return (
-    <svg
-      className="auth-social-icon"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M12 .7A11.5 11.5 0 0 0 8.36 23.1c.58.1.79-.25.79-.56v-2.2c-3.23.7-3.91-1.37-3.91-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.06-.72.08-.7.08-.7 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.39.97.1-.75.41-1.27.74-1.56-2.58-.29-5.3-1.29-5.3-5.75 0-1.27.45-2.31 1.2-3.12-.12-.29-.52-1.48.11-3.08 0 0 .98-.31 3.16 1.19A10.9 10.9 0 0 1 12 6.03c.98 0 1.95.13 2.87.39 2.18-1.5 3.15-1.19 3.15-1.19.63 1.6.23 2.79.11 3.08.75.81 1.2 1.85 1.2 3.12 0 4.47-2.72 5.45-5.31 5.74.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" />
     </svg>
   );
 }

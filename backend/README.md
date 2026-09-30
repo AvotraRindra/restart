@@ -7,7 +7,7 @@ Backend Node.js + Express + MySQL + Socket.IO du projet WebCup RE:START.
 - JWT + bcrypt ;
 - vérification de l'adresse e-mail ;
 - mot de passe oublié / réinitialisation par e-mail ;
-- OAuth Google et GitHub avec e-mail vérifié ;
+- OAuth Google avec e-mail vérifié ;
 - révocation des anciennes sessions après changement de mot de passe ;
 - profil utilisateur : nom, bio, photo, sexe et date de naissance ;
 - souvenirs texte ou vocal, transcription Groq/Whisper ;
@@ -39,7 +39,7 @@ Configurez dans `.env` :
 - `GROQ_API_KEY` ;
 - `GEMINI_API_KEY` ou `GEMINI_API_KEY_1..5` ;
 - `SMTP_*` pour les e-mails ;
-- identifiants OAuth Google/GitHub si ces connexions sont activées.
+- identifiants OAuth Google si ces connexions sont activées.
 
 Ne poussez jamais `.env` dans Git.
 
@@ -54,7 +54,6 @@ POST /api/auth/resend-verification
 POST /api/auth/forgot-password
 POST /api/auth/reset-password
 GET  /api/auth/oauth/google
-GET  /api/auth/oauth/github
 ```
 
 Les routes protégées attendent :
