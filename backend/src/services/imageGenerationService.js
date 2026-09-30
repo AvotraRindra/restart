@@ -2,7 +2,12 @@ const { GoogleGenAI } = require("@google/genai");
 const fs = require("fs");
 const path = require("path");
 
-const outputDir = path.join(
+
+/* =========================================================
+   DOSSIER DE SORTIE
+========================================================= */
+
+const generatedDir = path.join(
   __dirname,
   "..",
   "uploads",
@@ -10,41 +15,42 @@ const outputDir = path.join(
   "comics"
 );
 
-fs.mkdirSync(outputDir, {
+fs.mkdirSync(generatedDir, {
   recursive: true,
 });
 
 
 /* =========================================================
-   CLÉS GEMINI
+   UTILITAIRES
 ========================================================= */
 
-function getGeminiKeys() {
-  return [
-    process.env.GEMINI_API_KEY_1,
-    process.env.GEMINI_API_KEY_2,
-    process.env.GEMINI_API_KEY_3,
-    process.env.GEMINI_API_KEY_4,
-    process.env.GEMINI_API_KEY_5,
-    process.env.GEMINI_API_KEY,
-  ]
-    .map((key) => key?.trim())
-    .filter(Boolean)
-    .filter(
-      (key, index, array) =>
-        array.indexOf(key) === index
-    );
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 
 /* =========================================================
-   ATTENTE
+   RÉCUPÉRER LES CLÉS GEMINI
 ========================================================= */
 
-function sleep(ms) {
-  return new Promise((resolve) =>
-    setTimeout(resolve, ms)
-  );
+function getGeminiKeys() {
+  const keys = [
+    ...(process.env.GEMINI_API_KEYS || "").split(","),
+
+    process.env.GEMINI_API_KEY || "",
+
+    process.env.GEMINI_API_KEY_1 || "",
+    process.env.GEMINI_API_KEY_2 || "",
+    process.env.GEMINI_API_KEY_3 || "",
+    process.env.GEMINI_API_KEY_4 || "",
+    process.env.GEMINI_API_KEY_5 || "",
+  ]
+    .map((key) => key.trim())
+    .filter(Boolean);
+
+  return [...new Set(keys)];
 }
 
 
@@ -52,30 +58,22 @@ function sleep(ms) {
    ERREURS TEMPORAIRES
 ========================================================= */
 
-function isTemporaryError(error) {
+function isRetryable(error) {
   const message =
     error?.message ||
     String(error);
 
-  return (
-    message.includes("429") ||
-    message.includes("500") ||
-    message.includes("502") ||
-    message.includes("503") ||
-    message.includes("504") ||
-    message.includes("UNAVAILABLE") ||
-    message.includes("RESOURCE_EXHAUSTED") ||
-    message.includes("high demand") ||
-    message.includes("timeout")
+  return /429|500|502|503|504|UNAVAILABLE|RESOURCE_EXHAUSTED|rate|quota|high demand|temporar|timeout/i.test(
+    message
   );
 }
 
 
 /* =========================================================
-   URL UPLOAD -> FICHIER LOCAL
+   URL /uploads/... → CHEMIN LOCAL
 ========================================================= */
 
-function uploadUrlToPath(url) {
+function localPathFromUploadUrl(url) {
   if (
     !url ||
     !url.startsWith("/uploads/")
@@ -99,23 +97,21 @@ function uploadUrlToPath(url) {
 
 
 /* =========================================================
-   TYPE MIME
+   MIME TYPE
 ========================================================= */
 
-function getMimeType(filePath) {
-  const extension =
-    path.extname(
-      filePath
-    ).toLowerCase();
+function mimeTypeForFile(filePath) {
+  const ext =
+    path.extname(filePath).toLowerCase();
 
   if (
-    extension === ".jpg" ||
-    extension === ".jpeg"
+    ext === ".jpg" ||
+    ext === ".jpeg"
   ) {
     return "image/jpeg";
   }
 
-  if (extension === ".webp") {
+  if (ext === ".webp") {
     return "image/webp";
   }
 
@@ -124,7 +120,73 @@ function getMimeType(filePath) {
 
 
 /* =========================================================
-   INPUT GEMINI
+   PROMPT DE LA CASE
+========================================================= */
+
+function buildPrompt(
+  memory,
+  panel
+) {
+  return `
+Create exactly ONE professional comic-book panel for the RE:START memory application.
+
+MEMORY
+
+Title:
+${memory.title || ""}
+
+Emotion:
+${memory.emotion || "other"}
+
+Date:
+${memory.memory_date || "not specified"}
+
+Location:
+${memory.location || "not specified"}
+
+Original memory:
+${memory.text_content || ""}
+
+
+PANEL
+
+Visual description:
+${
+  panel.image_prompt ||
+  panel.narration ||
+  ""
+}
+
+Narration context:
+${panel.narration || "none"}
+
+Dialogue context:
+${panel.dialogue || "none"}
+
+
+VISUAL REQUIREMENTS
+
+- cinematic graphic-novel illustration
+- professional comic-book artwork
+- preserve the identity and appearance of supplied reference characters
+- expressive faces
+- natural poses
+- detailed environment
+- environment faithful to the memory and location
+- atmosphere consistent with the emotion "${memory.emotion || "other"}"
+- landscape 4:3 composition
+- no written text inside the image
+- no dialogue bubbles
+- no captions
+- no logo
+- no extra watermark
+- generate exactly one final image
+`.trim();
+}
+
+
+/* =========================================================
+   AJOUTER LES PHOTOS DES PERSONNAGES
 ========================================================= */
 
 function buildInput(
@@ -140,18 +202,16 @@ function buildInput(
 
 
   /*
-    Maximum 4 personnages de référence.
-    Gemini 3.1 Flash Image prend en charge
-    la cohérence de plusieurs personnages.
+    On utilise maximum 4 personnages
+    pour conserver une bonne cohérence.
   */
 
   for (
     const character
     of characters.slice(0, 4)
   ) {
-
     const filePath =
-      uploadUrlToPath(
+      localPathFromUploadUrl(
         character.image_url
       );
 
@@ -164,24 +224,13 @@ function buildInput(
     }
 
 
-    const data =
-      fs
-        .readFileSync(
-          filePath
-        )
-        .toString(
-          "base64"
-        );
-
-
     input.push({
       type: "text",
 
       text:
-        `Photo de référence du personnage ` +
-        `"${character.name}". ` +
-        `Conserve son visage, ses cheveux ` +
-        `et son apparence entre les cases.`,
+        `Reference image for the character named "${character.name}". ` +
+        `Keep this person's facial features, hair, skin tone and overall appearance ` +
+        `consistent in the generated comic panel.`,
     });
 
 
@@ -189,11 +238,14 @@ function buildInput(
       type: "image",
 
       mime_type:
-        getMimeType(
+        mimeTypeForFile(
           filePath
         ),
 
-      data,
+      data:
+        fs
+          .readFileSync(filePath)
+          .toString("base64"),
     });
   }
 
@@ -203,64 +255,14 @@ function buildInput(
 
 
 /* =========================================================
-   PROMPT
+   EXTRAIRE L'IMAGE GEMINI
 ========================================================= */
 
-function buildPrompt(
-  memory,
-  panel
+function extractImage(
+  interaction
 ) {
-  return `
-Create one professional comic-book panel.
-
-Memory title:
-${memory.title || ""}
-
-Main emotion:
-${memory.emotion || ""}
-
-Location:
-${memory.location || ""}
-
-Memory:
-${memory.text_content || ""}
-
-Panel visual description:
-${panel.image_prompt || ""}
-
-Narration:
-${panel.narration || ""}
-
-Dialogue:
-${panel.dialogue || ""}
-
-Requirements:
-- cinematic graphic novel illustration
-- professional comic book artwork
-- preserve character appearance across panels
-- use supplied reference images when available
-- expressive faces
-- detailed environment
-- mood consistent with the emotion
-- no written text in the generated image
-- no dialogue bubbles
-- no captions
-- no logo
-- no extra watermark
-- landscape 4:3 composition
-- generate exactly one image
-`.trim();
-}
-
-
-/* =========================================================
-   EXTRAIRE IMAGE DE LA RÉPONSE
-========================================================= */
-
-function extractImage(interaction) {
-
   /*
-    Format principal documenté :
+    Format principal actuel :
     interaction.output_image.data
   */
 
@@ -269,34 +271,23 @@ function extractImage(interaction) {
       ?.output_image
       ?.data
   ) {
-
-    return {
-      data:
-        interaction
-          .output_image
-          .data,
-
-      mimeType:
-        interaction
-          .output_image
-          .mime_type ||
-        "image/png",
-    };
+    return interaction
+      .output_image
+      .data;
   }
 
 
   /*
-    Fallback :
-    chercher dans steps
+    Fallback utile lorsque Gemini
+    renvoie plusieurs blocs.
   */
 
   for (
     const step
     of interaction?.steps || []
   ) {
-
     if (
-      step.type !==
+      step?.type !==
       "model_output"
     ) {
       continue;
@@ -305,22 +296,13 @@ function extractImage(interaction) {
 
     for (
       const block
-      of step.content || []
+      of step?.content || []
     ) {
-
       if (
-        block.type === "image" &&
-        block.data
+        block?.type === "image" &&
+        block?.data
       ) {
-
-        return {
-          data:
-            block.data,
-
-          mimeType:
-            block.mime_type ||
-            "image/png",
-        };
+        return block.data;
       }
     }
   }
@@ -331,41 +313,14 @@ function extractImage(interaction) {
 
 
 /* =========================================================
-   EXTENSION
+   APPEL GEMINI IMAGE
 ========================================================= */
 
-function extensionFromMime(
-  mimeType
-) {
-
-  if (
-    mimeType ===
-    "image/jpeg"
-  ) {
-    return ".jpg";
-  }
-
-  if (
-    mimeType ===
-    "image/webp"
-  ) {
-    return ".webp";
-  }
-
-  return ".png";
-}
-
-
-/* =========================================================
-   UNE TENTATIVE GEMINI
-========================================================= */
-
-async function callGeminiImage({
+async function requestImage({
   apiKey,
   model,
   input,
 }) {
-
   const ai =
     new GoogleGenAI({
       apiKey,
@@ -391,15 +346,29 @@ async function callGeminiImage({
         image_size:
           "1K",
       },
+
     });
 
 
-  return interaction;
+  const imageData =
+    extractImage(
+      interaction
+    );
+
+
+  if (!imageData) {
+    throw new Error(
+      "Gemini n'a retourné aucune image exploitable."
+    );
+  }
+
+
+  return imageData;
 }
 
 
 /* =========================================================
-   GÉNÉRATION CASE BD
+   GÉNÉRER UNE CASE BD
 ========================================================= */
 
 async function generateComicPanelImage({
@@ -413,9 +382,8 @@ async function generateComicPanelImage({
 
 
   if (!keys.length) {
-
     throw new Error(
-      "Aucune clé Gemini configurée."
+      "Aucune clé Gemini configurée pour la génération d'images."
     );
   }
 
@@ -425,14 +393,17 @@ async function generateComicPanelImage({
   */
 
   const models = [
-    process.env
-      .GEMINI_IMAGE_MODEL ||
+    process.env.GEMINI_IMAGE_MODEL ||
       "gemini-3.1-flash-image",
 
-    process.env
-      .GEMINI_IMAGE_FALLBACK_MODEL ||
+    process.env.GEMINI_IMAGE_FALLBACK_MODEL ||
       "gemini-3.1-flash-lite-image",
-  ];
+  ]
+    .filter(Boolean);
+
+
+  const uniqueModels =
+    [...new Set(models)];
 
 
   const prompt =
@@ -458,11 +429,11 @@ async function generateComicPanelImage({
 
   for (
     const model
-    of models
+    of uniqueModels
   ) {
 
     /* ===================================================
-       CLÉS
+       CLÉS GEMINI
     =================================================== */
 
     for (
@@ -471,12 +442,8 @@ async function generateComicPanelImage({
       keyIndex++
     ) {
 
-      const apiKey =
-        keys[keyIndex];
-
-
       /* =================================================
-         TENTATIVES
+         MAXIMUM 2 TENTATIVES PAR CLÉ
       ================================================= */
 
       for (
@@ -488,84 +455,56 @@ async function generateComicPanelImage({
         try {
 
           console.log(
-            `Gemini Image ${model} ` +
+            `Gemini Image ${model}, ` +
             `clé ${keyIndex + 1}/${keys.length}, ` +
             `tentative ${attempt}/2, ` +
             `case ${panel.panel_number}`
           );
 
 
-          const interaction =
-            await callGeminiImage({
-              apiKey,
+          const imageData =
+            await requestImage({
+
+              apiKey:
+                keys[keyIndex],
+
               model,
+
               input,
+
             });
 
 
-          const image =
-            extractImage(
-              interaction
+          /* =============================================
+             FICHIER
+          ============================================= */
+
+          const filename =
+            `memory-${memory.id}` +
+            `-panel-${panel.panel_number}` +
+            `-${Date.now()}.png`;
+
+
+          const absolutePath =
+            path.join(
+              generatedDir,
+              filename
             );
-
-
-          if (!image) {
-
-            /*
-              Utile pour diagnostiquer
-              ce que Gemini a réellement retourné.
-            */
-
-            console.error(
-              "Réponse Gemini Image sans image :",
-              JSON.stringify(
-                interaction,
-                null,
-                2
-              ).slice(
-                0,
-                4000
-              )
-            );
-
-
-            throw new Error(
-              "Gemini n'a retourné aucune image exploitable."
-            );
-          }
 
 
           /* =============================================
              SAUVEGARDE
           ============================================= */
 
-          const extension =
-            extensionFromMime(
-              image.mimeType
-            );
-
-
-          const filename =
-            `memory-${memory.id}` +
-            `-panel-${panel.panel_number}` +
-            `-${Date.now()}` +
-            extension;
-
-
-          const filePath =
-            path.join(
-              outputDir,
-              filename
-            );
-
-
           fs.writeFileSync(
-            filePath,
+
+            absolutePath,
 
             Buffer.from(
-              image.data,
+              imageData,
               "base64"
             )
+
           );
 
 
@@ -574,6 +513,10 @@ async function generateComicPanelImage({
           );
 
 
+          /* =============================================
+             URL SAUVEGARDÉE EN MYSQL
+          ============================================= */
+
           return (
             `/uploads/generated/comics/` +
             filename
@@ -581,51 +524,57 @@ async function generateComicPanelImage({
 
         } catch (error) {
 
-          lastError = error;
+          lastError =
+            error;
+
+
+          const message =
+            error?.message ||
+            String(error);
 
 
           console.error(
-            `Gemini Image ${model} ` +
+
+            `Gemini Image ${model}, ` +
             `clé ${keyIndex + 1}/${keys.length}, ` +
             `tentative ${attempt}/2, ` +
             `case ${panel.panel_number}:`,
-            error?.message ||
-            error
+
+            message
+
           );
 
 
           /*
-            Erreur temporaire :
-            attendre puis réessayer.
+            Pas d'erreur temporaire :
+            inutile de refaire exactement
+            le même appel avec cette clé.
           */
 
           if (
-            isTemporaryError(
-              error
-            )
+            !isRetryable(error)
           ) {
-
-            if (
-              attempt < 2
-            ) {
-
-              await sleep(
-                attempt === 1
-                  ? 2000
-                  : 5000
-              );
-            }
-
-            continue;
+            break;
           }
 
 
           /*
-            Erreur permanente :
+            Si deuxième tentative terminée,
             passer à la clé suivante.
           */
 
-          break;
+          if (
+            attempt === 2
+          ) {
+            break;
+          }
+
+
+          await sleep(
+            attempt === 1
+              ? 1800
+              : 3500
+          );
         }
       }
     }
@@ -634,8 +583,9 @@ async function generateComicPanelImage({
 
   throw (
     lastError ||
+
     new Error(
-      "Impossible de générer l'image."
+      "Impossible de générer l'image de cette case."
     )
   );
 }
