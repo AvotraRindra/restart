@@ -93,7 +93,7 @@ export default function CreativeStudioPage({
 
 
   /* =====================================================
-     SÉLECTION DU SOUVENIR
+     SÉLECTION
   ===================================================== */
 
   useEffect(() => {
@@ -111,7 +111,9 @@ export default function CreativeStudioPage({
         initialMemoryId
       );
 
-    } else if (
+    }
+
+    else if (
       !selectedId &&
       memories[0]?.id
     ) {
@@ -130,22 +132,26 @@ export default function CreativeStudioPage({
 
   const memory =
     useMemo(
+
       () =>
         memories.find(
+
           (item) =>
             String(item.id) ===
             String(selectedId)
+
         ) || null,
 
       [
         memories,
         selectedId,
       ]
+
     );
 
 
   /* =====================================================
-     RECHARGER LA CRÉATION
+     ACTUALISER
   ===================================================== */
 
   async function refresh(
@@ -203,11 +209,17 @@ export default function CreativeStudioPage({
   }
 
 
+  /* =====================================================
+     CHANGEMENT DE SOUVENIR
+  ===================================================== */
+
   useEffect(() => {
 
     setCreation(null);
 
     setNotice("");
+
+    setError("");
 
 
     if (selectedId) {
@@ -222,7 +234,7 @@ export default function CreativeStudioPage({
 
 
   /* =====================================================
-     GÉNÉRATION MNEMOS
+     GÉNÉRER
   ===================================================== */
 
   async function generate() {
@@ -242,7 +254,7 @@ export default function CreativeStudioPage({
     try {
 
       /* -------------------------------------------------
-         VIDÉO : uploader les photos
+         PHOTOS VIDÉO
       ------------------------------------------------- */
 
       if (
@@ -264,7 +276,7 @@ export default function CreativeStudioPage({
 
 
       /* -------------------------------------------------
-         BD : personnage
+         PERSONNAGE BD
       ------------------------------------------------- */
 
       if (
@@ -289,27 +301,36 @@ export default function CreativeStudioPage({
 
 
         await addComicCharacter(
+
           memory.id,
 
           characterName.trim(),
 
           characterImage
+
         );
       }
 
 
       /* -------------------------------------------------
-         GÉNÉRATION
+         MNEMOS
       ------------------------------------------------- */
 
-      setNotice(
+      if (
         memory.memory_type ===
-          "bd"
+        "bd"
+      ) {
 
-          ? "MNEMOS écrit la BD puis génère les images des cases…"
+        setNotice(
+          "MNEMOS écrit la bande dessinée puis génère les illustrations…"
+        );
 
-          : "MNEMOS génère la création…"
-      );
+      } else {
+
+        setNotice(
+          "MNEMOS génère la création…"
+        );
+      }
 
 
       const generated =
@@ -319,7 +340,7 @@ export default function CreativeStudioPage({
 
 
       /* -------------------------------------------------
-         Recharger depuis MySQL
+         RECHARGER MYSQL
       ------------------------------------------------- */
 
       await refresh(
@@ -329,7 +350,7 @@ export default function CreativeStudioPage({
 
 
       /* -------------------------------------------------
-         Avertissements images
+         AVERTISSEMENTS
       ------------------------------------------------- */
 
       if (
@@ -339,8 +360,7 @@ export default function CreativeStudioPage({
         setNotice(
           `Création terminée. ` +
           `${generated.warnings.length} ` +
-          `avertissement(s) pendant ` +
-          `la génération des images.`
+          `illustration(s) n'ont pas pu être générées.`
         );
 
       } else {
@@ -352,16 +372,14 @@ export default function CreativeStudioPage({
 
 
       /* -------------------------------------------------
-         Nettoyage des inputs
+         RESET
       ------------------------------------------------- */
 
-      setCharacterImage(
-        null
-      );
+      setPhotos([]);
 
       setCharacterName("");
 
-      setPhotos([]);
+      setCharacterImage(null);
 
 
       onChanged?.();
@@ -369,9 +387,11 @@ export default function CreativeStudioPage({
     } catch (error) {
 
       setError(
+
         error.details ||
         error.message ||
         "La génération a échoué."
+
       );
 
 
@@ -385,7 +405,7 @@ export default function CreativeStudioPage({
 
 
   /* =====================================================
-     PAS DE SOUVENIRS
+     AUCUN SOUVENIR
   ===================================================== */
 
   if (!memories.length) {
@@ -408,8 +428,7 @@ export default function CreativeStudioPage({
 
             <p>
               Transformez un souvenir
-              en livre, vidéo ou
-              bande dessinée.
+              en livre, vidéo ou bande dessinée.
             </p>
 
           </div>
@@ -420,14 +439,12 @@ export default function CreativeStudioPage({
         <div className="empty-state">
 
           <strong>
-            Vous n'avez encore
-            aucun souvenir.
+            Vous n'avez encore aucun souvenir.
           </strong>
 
           <p>
             Créez d'abord un souvenir
-            en choisissant sa forme
-            créative.
+            en choisissant sa forme créative.
           </p>
 
           <button
@@ -483,9 +500,8 @@ export default function CreativeStudioPage({
 
           <p>
             Sélectionnez un souvenir,
-            ajoutez les références
-            nécessaires puis lancez
-            ou relancez sa génération.
+            ajoutez les références nécessaires
+            puis lancez ou relancez sa génération.
           </p>
 
         </div>
@@ -509,7 +525,7 @@ export default function CreativeStudioPage({
 
 
       {/* =================================================
-          MESSAGES
+          ALERTES
       ================================================= */}
 
       {error && (
@@ -519,6 +535,7 @@ export default function CreativeStudioPage({
           {error}
 
         </div>
+
       )}
 
 
@@ -529,18 +546,19 @@ export default function CreativeStudioPage({
           {notice}
 
         </div>
+
       )}
 
 
       {/* =================================================
-          CONTENU
+          GRID
       ================================================= */}
 
       <div className="studio-live-grid">
 
 
         {/* ===============================================
-            LISTE DES SOUVENIRS
+            SOUVENIRS
         =============================================== */}
 
         <aside
@@ -578,12 +596,14 @@ export default function CreativeStudioPage({
               >
 
                 <span>
+
                   {
                     typeIcon[
                       item.memory_type
                     ] ||
                     "✦"
                   }
+
                 </span>
 
 
@@ -615,6 +635,7 @@ export default function CreativeStudioPage({
                 </div>
 
               </button>
+
             )
           )}
 
@@ -637,7 +658,7 @@ export default function CreativeStudioPage({
             <>
 
               {/* -----------------------------------------
-                  Titre
+                  HEADER SOUVENIR
               ----------------------------------------- */}
 
               <div className="studio-live-head">
@@ -722,11 +743,8 @@ export default function CreativeStudioPage({
                     </strong>
 
                     <p>
-                      Ajoutez des photos
-                      du souvenir avant
-                      de générer ou
-                      régénérer le
-                      storyboard.
+                      Ajoutez des photos du souvenir
+                      avant de générer le storyboard.
                     </p>
 
 
@@ -744,6 +762,7 @@ export default function CreativeStudioPage({
                       onChange={
                         (event) =>
                           setPhotos(
+
                             [
                               ...event
                                 .target
@@ -752,6 +771,7 @@ export default function CreativeStudioPage({
                               0,
                               10
                             )
+
                           )
                       }
                     />
@@ -761,11 +781,12 @@ export default function CreativeStudioPage({
 
                       {photos.length}
 
-                      {" photo(s) prête(s) à être envoyée(s)"}
+                      {" photo(s) prête(s)"}
 
                     </small>
 
                   </div>
+
                 )
               }
 
@@ -786,14 +807,9 @@ export default function CreativeStudioPage({
 
 
                     <p>
-                      Optionnel :
-                      ajoutez une photo.
-
-                      MNEMOS l'utilisera
-                      pour garder une
-                      apparence plus
-                      cohérente entre
-                      les cases.
+                      Ajoutez éventuellement une photo
+                      pour aider MNEMOS à conserver
+                      le même personnage entre les cases.
                     </p>
 
 
@@ -831,10 +847,12 @@ export default function CreativeStudioPage({
                         onChange={
                           (event) =>
                             setCharacterImage(
+
                               event
                                 .target
                                 .files?.[0] ||
                               null
+
                             )
                         }
                       />
@@ -842,6 +860,7 @@ export default function CreativeStudioPage({
                     </div>
 
                   </div>
+
                 )
               }
 
@@ -897,7 +916,7 @@ export default function CreativeStudioPage({
                     <div className="empty-state">
 
                       <p>
-                        Chargement…
+                        Génération en cours…
                       </p>
 
                     </div>
@@ -907,17 +926,20 @@ export default function CreativeStudioPage({
                   : (
 
                     <CreationViewer
+
                       data={creation}
 
                       type={
-                        memory
-                          .memory_type
+                        memory.memory_type
                       }
+
                     />
+
                   )
               }
 
             </>
+
           )}
 
         </main>
@@ -925,6 +947,7 @@ export default function CreativeStudioPage({
       </div>
 
     </section>
+
   );
 }
 
@@ -960,6 +983,7 @@ function CreationViewer({
         </p>
 
       </div>
+
     );
   }
 
@@ -968,7 +992,9 @@ function CreationViewer({
      LIVRE
   ===================================================== */
 
-  if (type === "livre") {
+  if (
+    type === "livre"
+  ) {
 
     return (
 
@@ -989,6 +1015,7 @@ function CreationViewer({
         }
 
       />
+
     );
   }
 
@@ -997,14 +1024,16 @@ function CreationViewer({
      BANDE DESSINÉE
   ===================================================== */
 
-  if (type === "bd") {
+  if (
+    type === "bd"
+  ) {
 
     return (
 
       <div>
 
         {/* -----------------------------------------------
-            Références personnages
+            PERSONNAGES
         ----------------------------------------------- */}
 
         {
@@ -1024,6 +1053,7 @@ function CreationViewer({
                     >
 
                       <img
+
                         src={
                           imageUrl(
                             character
@@ -1034,6 +1064,7 @@ function CreationViewer({
                         alt={
                           character.name
                         }
+
                       />
 
                       <figcaption>
@@ -1041,11 +1072,13 @@ function CreationViewer({
                       </figcaption>
 
                     </figure>
+
                   )
                 )
               }
 
             </div>
+
           )
         }
 
@@ -1066,10 +1099,6 @@ function CreationViewer({
                     panel.panel_number
                   }
                 >
-
-                  {/* -------------------------------------
-                      IMAGE
-                  ------------------------------------- */}
 
                   <div
                     className="
@@ -1093,6 +1122,7 @@ function CreationViewer({
                         ? (
 
                           <img
+
                             className="
                               comic-generated-image
                             "
@@ -1104,11 +1134,13 @@ function CreationViewer({
                             }
 
                             alt={
-                              `Case ${panel.panel_number} de la bande dessinée`
+                              `Case ${panel.panel_number}`
                             }
 
                             loading="lazy"
+
                           />
+
                         )
 
                         : (
@@ -1116,31 +1148,25 @@ function CreationViewer({
                           <div className="comic-generation-fallback">
 
                             <strong>
-                              Illustration
-                              non disponible
+                              Illustration indisponible
                             </strong>
-
 
                             <small>
 
                               {
                                 panel.image_prompt ||
-
-                                "L'image de cette case n'a pas encore été générée."
+                                "Cette illustration n'a pas pu être générée."
                               }
 
                             </small>
 
                           </div>
+
                         )
                     }
 
                   </div>
 
-
-                  {/* -------------------------------------
-                      Narration
-                  ------------------------------------- */}
 
                   {
                     panel.narration && (
@@ -1152,13 +1178,10 @@ function CreationViewer({
                         }
 
                       </p>
+
                     )
                   }
 
-
-                  {/* -------------------------------------
-                      Dialogue
-                  ------------------------------------- */}
 
                   {
                     panel.dialogue && (
@@ -1170,10 +1193,12 @@ function CreationViewer({
                         }”
 
                       </blockquote>
+
                     )
                   }
 
                 </article>
+
               )
             )
           }
@@ -1181,6 +1206,7 @@ function CreationViewer({
         </div>
 
       </div>
+
     );
   }
 
@@ -1210,23 +1236,25 @@ function CreationViewer({
                   >
 
                     <img
+
                       src={
                         imageUrl(
                           photo.image_url
                         )
                       }
 
-                      alt="
-                        Référence vidéo
-                      "
+                      alt="Référence vidéo"
+
                     />
 
                   </figure>
+
                 )
               )
             }
 
           </div>
+
         )
       }
 
@@ -1245,11 +1273,7 @@ function CreationViewer({
               >
 
                 <span>
-
-                  {
-                    scene.scene_number
-                  }
-
+                  {scene.scene_number}
                 </span>
 
 
@@ -1295,6 +1319,7 @@ function CreationViewer({
                 </div>
 
               </article>
+
             )
           )
         }
@@ -1304,14 +1329,12 @@ function CreationViewer({
 
       <p className="studio-limit-note">
 
-        Le backend actuel génère
+        Le backend génère actuellement
         le storyboard et la narration.
-
-        L'assemblage en MP4 reste
-        une étape média supplémentaire.
 
       </p>
 
     </div>
+
   );
 }
