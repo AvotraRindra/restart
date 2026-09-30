@@ -5,7 +5,9 @@ const Creation =
   require("../models/Creation");
 
 const service =
-  require("../services/creationService");
+  require(
+    "../services/creationService"
+  );
 
 const imageGenerationService =
   require(
@@ -14,7 +16,7 @@ const imageGenerationService =
 
 
 /* =========================================================
-   GÉNÉRER UNE CRÉATION
+   GÉNÉRATION
 ========================================================= */
 
 exports.generate =
@@ -27,7 +29,7 @@ exports.generate =
   try {
 
     /* =====================================================
-       CHERCHER LE SOUVENIR
+       SOUVENIR
     ===================================================== */
 
     const memory =
@@ -37,56 +39,65 @@ exports.generate =
 
 
     if (!memory) {
+
       return res
         .status(404)
         .json({
+
           success: false,
 
           message:
             "Souvenir introuvable.",
+
         });
     }
 
 
     /* =====================================================
-       VÉRIFIER LE PROPRIÉTAIRE
+       PROPRIÉTAIRE
     ===================================================== */
 
     if (
       Number(memory.owner_id) !==
       Number(req.user.id)
     ) {
+
       return res
         .status(403)
         .json({
+
           success: false,
 
           message:
             "Vous ne pouvez pas générer ce souvenir.",
+
         });
     }
 
 
     /* =====================================================
-       LE SOUVENIR DOIT CONTENIR DU TEXTE
+       TEXTE / TRANSCRIPTION
     ===================================================== */
 
     if (
       !memory.text_content
     ) {
+
       return res
         .status(400)
         .json({
+
           success: false,
 
           message:
             "Une transcription ou un texte est nécessaire avant la génération.",
+
         });
     }
 
 
     /* =====================================================
-       STATUT
+       STATUS
     ===================================================== */
 
     await Memory
@@ -121,8 +132,11 @@ exports.generate =
 
         await Creation
           .saveBook(
+
             memory.id,
+
             result.pages
+
           );
       }
 
@@ -152,8 +166,11 @@ exports.generate =
 
         await Creation
           .saveVideo(
+
             memory.id,
+
             result.scenes
+
           );
       }
 
@@ -164,9 +181,9 @@ exports.generate =
 
       else {
 
-        /* -----------------------------------------------
-           Personnages avec leurs photos
-        ----------------------------------------------- */
+        /* -------------------------------------------------
+           PERSONNAGES
+        ------------------------------------------------- */
 
         const characters =
           await Memory
@@ -175,12 +192,9 @@ exports.generate =
             );
 
 
-        /* -----------------------------------------------
-           Gemini texte crée :
-           - narration
-           - dialogue
-           - image_prompt
-        ----------------------------------------------- */
+        /* -------------------------------------------------
+           ÉCRITURE DE LA BD
+        ------------------------------------------------- */
 
         result =
           await service
@@ -191,25 +205,26 @@ exports.generate =
 
 
         /*
-          On sauvegarde immédiatement la structure.
+          Sauvegarde immédiate.
 
-          Ainsi, si Gemini Image échoue,
-          les textes de la BD ne sont pas perdus.
+          Même si les images échouent,
+          narration/dialogues restent
+          enregistrés.
         */
 
         await Creation
           .saveComic(
+
             memory.id,
+
             result.panels
+
           );
 
 
-        /* -----------------------------------------------
-           Génération des vraies images
-        ----------------------------------------------- */
-
-        let generatedImages = 0;
-
+        /* -------------------------------------------------
+           IMAGES DES CASES
+        ------------------------------------------------- */
 
         for (
           const panel
@@ -218,45 +233,37 @@ exports.generate =
 
           try {
 
-            /* ===========================================
-               GEMINI IMAGE
-            =========================================== */
-
             const imageUrl =
               await imageGenerationService
                 .generateComicPanelImage({
+
                   memory,
 
                   panel,
 
                   characters,
+
                 });
 
 
-            /* ===========================================
-               ENREGISTRER DANS MYSQL
-            =========================================== */
+            /* --------------------------------------------
+               MYSQL
+            -------------------------------------------- */
 
             await Creation
               .updateComicPanelImage(
+
                 memory.id,
 
                 panel.panel_number,
 
                 imageUrl
+
               );
 
 
-            /*
-              On ajoute également l'URL
-              au résultat en mémoire.
-            */
-
             panel.image_url =
               imageUrl;
-
-
-            generatedImages++;
 
           } catch (
             imageError
@@ -270,55 +277,48 @@ exports.generate =
 
 
             console.error(
+
               `Échec image BD mémoire ${memory.id}, ` +
               `case ${panel.panel_number}:`,
+
               message
+
             );
 
+
+            /*
+              On continue les autres cases.
+            */
 
             warnings.push(
-              `Case ${panel.panel_number}: ` +
-              `l'image n'a pas pu être générée.`
+
+              `Case ${panel.panel_number}: image non générée.`
+
             );
           }
-        }
-
-
-        /* -----------------------------------------------
-           Aucune image n'a fonctionné
-        ----------------------------------------------- */
-
-        if (
-          (result.panels || [])
-            .length > 0 &&
-          generatedImages === 0
-        ) {
-
-          warnings.push(
-            "La structure de la bande dessinée a été créée, " +
-            "mais aucune image n'a pu être générée."
-          );
         }
       }
 
 
       /* ===================================================
-         GÉNÉRATION TERMINÉE
+         TERMINÉ
       =================================================== */
 
       await Memory
         .setGenerationStatus(
+
           memory.id,
 
           "completed",
 
           result.title ||
           null
+
         );
 
 
       /* ===================================================
-         RECHARGER DEPUIS MYSQL
+         RECHARGER LES DONNÉES MYSQL
       =================================================== */
 
       const freshMemory =
@@ -340,52 +340,71 @@ exports.generate =
       =================================================== */
 
       return res.json({
+
         success: true,
 
+
         message:
+
           warnings.length > 0
+
             ? "Création terminée avec certains avertissements."
+
             : "Création générée avec succès.",
+
 
         warnings,
 
+
         data: {
+
           type:
             memory.memory_type,
+
 
           title:
             result.title ||
             memory.title,
 
+
           creation:
             storedCreation,
+
         },
+
       });
 
     } catch (error) {
 
       /* ===================================================
-         ÉCHEC DE GÉNÉRATION PRINCIPALE
+         ÉCHEC GÉNÉRAL
       =================================================== */
 
       await Memory
         .setGenerationStatus(
+
           memory.id,
+
           "failed"
+
         );
 
 
       return res
         .status(502)
         .json({
+
           success: false,
+
 
           message:
             "Le souvenir est sauvegardé mais sa génération a échoué.",
 
+
           details:
             error?.message ||
             String(error),
+
         });
     }
 
@@ -397,7 +416,7 @@ exports.generate =
 
 
 /* =========================================================
-   RÉCUPÉRER UNE CRÉATION
+   RÉCUPÉRER LA CRÉATION
 ========================================================= */
 
 exports.getCreation =
@@ -420,10 +439,12 @@ exports.getCreation =
       return res
         .status(404)
         .json({
+
           success: false,
 
           message:
             "Souvenir introuvable.",
+
         });
     }
 
@@ -443,24 +464,29 @@ exports.getCreation =
       return res
         .status(403)
         .json({
+
           success: false,
 
           message:
             "Accès refusé.",
+
         });
     }
 
 
     /* =====================================================
-       DONNÉES COMPLÈTES
+       DONNÉES
     ===================================================== */
 
     return res.json({
+
       success: true,
+
 
       data: {
 
         memory,
+
 
         photos:
           await Memory
@@ -468,14 +494,19 @@ exports.getCreation =
               memory.id
             ),
 
+
         characters:
+
           memory.memory_type ===
           "bd"
+
             ? await Memory
                 .characters(
                   memory.id
                 )
+
             : [],
+
 
         attachments:
           await Memory
@@ -483,12 +514,15 @@ exports.getCreation =
               memory.id
             ),
 
+
         creation:
           await Creation
             .get(
               memory
             ),
+
       },
+
     });
 
   } catch (error) {
