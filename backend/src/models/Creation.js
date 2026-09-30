@@ -3,21 +3,24 @@ const db =
 
 
 /* =========================================================
-   SUPPRIMER UNE ANCIENNE GÉNÉRATION
+   SUPPRIMER LES ANCIENNES CRÉATIONS
 ========================================================= */
 
 async function clearForMemory(
   memoryId
 ) {
+
   await db.execute(
     "DELETE FROM book_pages WHERE memory_id = ?",
     [memoryId]
   );
 
+
   await db.execute(
     "DELETE FROM video_scenes WHERE memory_id = ?",
     [memoryId]
   );
+
 
   await db.execute(
     "DELETE FROM comic_panels WHERE memory_id = ?",
@@ -34,13 +37,17 @@ async function saveBook(
   memoryId,
   pages
 ) {
+
   await clearForMemory(
     memoryId
   );
 
+
   for (
-    const page of pages || []
+    const page
+    of pages || []
   ) {
+
     await db.execute(
       `
       INSERT INTO book_pages
@@ -52,20 +59,26 @@ async function saveBook(
         image_prompt,
         image_url
       )
+
       VALUES (?, ?, ?, ?, ?, ?)
       `,
+
       [
         memoryId,
 
         page.page_number,
 
-        page.title || null,
+        page.title ||
+          null,
 
-        page.content || "",
+        page.content ||
+          "",
 
-        page.image_prompt || null,
+        page.image_prompt ||
+          null,
 
-        page.image_url || null,
+        page.image_url ||
+          null,
       ]
     );
   }
@@ -80,13 +93,17 @@ async function saveVideo(
   memoryId,
   scenes
 ) {
+
   await clearForMemory(
     memoryId
   );
 
+
   for (
-    const scene of scenes || []
+    const scene
+    of scenes || []
   ) {
+
     await db.execute(
       `
       INSERT INTO video_scenes
@@ -99,22 +116,29 @@ async function saveVideo(
         image_url,
         video_url
       )
+
       VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
+
       [
         memoryId,
 
         scene.scene_number,
 
-        scene.duration_seconds || 5,
+        scene.duration_seconds ||
+          5,
 
-        scene.narration || null,
+        scene.narration ||
+          null,
 
-        scene.image_prompt || null,
+        scene.image_prompt ||
+          null,
 
-        scene.image_url || null,
+        scene.image_url ||
+          null,
 
-        scene.video_url || null,
+        scene.video_url ||
+          null,
       ]
     );
   }
@@ -129,13 +153,17 @@ async function saveComic(
   memoryId,
   panels
 ) {
+
   await clearForMemory(
     memoryId
   );
 
+
   for (
-    const panel of panels || []
+    const panel
+    of panels || []
   ) {
+
     await db.execute(
       `
       INSERT INTO comic_panels
@@ -147,20 +175,26 @@ async function saveComic(
         image_prompt,
         image_url
       )
+
       VALUES (?, ?, ?, ?, ?, ?)
       `,
+
       [
         memoryId,
 
         panel.panel_number,
 
-        panel.narration || null,
+        panel.narration ||
+          null,
 
-        panel.dialogue || null,
+        panel.dialogue ||
+          null,
 
-        panel.image_prompt || null,
+        panel.image_prompt ||
+          null,
 
-        panel.image_url || null,
+        panel.image_url ||
+          null,
       ]
     );
   }
@@ -168,7 +202,7 @@ async function saveComic(
 
 
 /* =========================================================
-   METTRE À JOUR L'IMAGE D'UNE CASE
+   ENREGISTRER L'IMAGE D'UNE CASE
 ========================================================= */
 
 async function updateComicPanelImage(
@@ -176,6 +210,7 @@ async function updateComicPanelImage(
   panelNumber,
   imageUrl
 ) {
+
   const [result] =
     await db.execute(
       `
@@ -187,12 +222,14 @@ async function updateComicPanelImage(
         memory_id = ?
         AND panel_number = ?
       `,
+
       [
         imageUrl,
         memoryId,
         panelNumber,
       ]
     );
+
 
   return (
     result.affectedRows > 0
@@ -201,83 +238,103 @@ async function updateComicPanelImage(
 
 
 /* =========================================================
-   RÉCUPÉRER UNE CRÉATION
+   RÉCUPÉRATION
 ========================================================= */
 
-async function get(memory) {
+async function get(
+  memory
+) {
 
-  /* -----------------------------
-     Livre
-  ----------------------------- */
+  /* ----------------------------
+     LIVRE
+  ---------------------------- */
 
   if (
     memory.memory_type ===
     "livre"
   ) {
+
     const [rows] =
       await db.execute(
         `
         SELECT *
+
         FROM book_pages
 
         WHERE memory_id = ?
 
         ORDER BY page_number
         `,
-        [memory.id]
+
+        [
+          memory.id
+        ]
       );
+
 
     return rows;
   }
 
 
-  /* -----------------------------
-     Vidéo
-  ----------------------------- */
+  /* ----------------------------
+     VIDÉO
+  ---------------------------- */
 
   if (
     memory.memory_type ===
     "video"
   ) {
+
     const [rows] =
       await db.execute(
         `
         SELECT *
+
         FROM video_scenes
 
         WHERE memory_id = ?
 
         ORDER BY scene_number
         `,
-        [memory.id]
+
+        [
+          memory.id
+        ]
       );
+
 
     return rows;
   }
 
 
-  /* -----------------------------
+  /* ----------------------------
      BD
-  ----------------------------- */
+  ---------------------------- */
 
   const [rows] =
     await db.execute(
       `
       SELECT *
+
       FROM comic_panels
 
       WHERE memory_id = ?
 
       ORDER BY panel_number
       `,
-      [memory.id]
+
+      [
+        memory.id
+      ]
     );
+
 
   return rows;
 }
 
 
 module.exports = {
+
   clearForMemory,
 
   saveBook,
@@ -289,4 +346,5 @@ module.exports = {
   updateComicPanelImage,
 
   get,
+
 };
